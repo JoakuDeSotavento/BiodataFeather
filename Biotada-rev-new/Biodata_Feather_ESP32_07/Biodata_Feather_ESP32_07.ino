@@ -28,14 +28,48 @@
 7. press button, display status LED and usb serial information print
 
 ***/
+
+#include <WiFiUdp.h>
+#include <OSCMessage.h>
+
+// Configuración OSC
+const char* oscIP = "192.168.54.62";  // Dirección IP de destino
+const int oscPort = 8000;              // Puerto de destino
+
+WiFiUDP Udp;
+
+// // Variables globales
+// extern unsigned long rawSerialTime;
+// extern const unsigned long rawSerialDelay;
+// extern float threshold;
+// extern float threshMin;
+// extern float threshMax;
+// extern int rawSerial;
+// extern unsigned long currentMillis;
+
+void sendOSCMessage(float thresholdValue, float deltaValue, int changeDetected) {
+  OSCMessage msg("/rawSerial");
+
+  // Agrega los valores al mensaje OSC
+  msg.add(thresholdValue);
+  msg.add(deltaValue);
+  msg.add(changeDetected);
+
+  // // Enviar el mensaje
+  // Udp.beginPacket(oscIP, oscPort);
+  // msg.send(Udp);
+  // Udp.endPacket();
+  // msg.empty(); // Limpia el mensaje
+}
+
 // Wifi Credentials ~~~~~~~~~~~!!!!
 
-char ssid[] = "OxfordEast"; //  your network SSID (name)
-char pass[] = "oxfordeast";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "b1t"; //  your network SSID (name)
+char pass[] = "1nt3rn3t";    // your network password (use for WPA, or use as key for WEP)
 // ~~~~~~~~~~~~~!!!!
 //  Set the MIDI Channel of this node
   byte channel = 1; // 
-  IPAddress local_IP(192,168,68,207); //use this IP
+  IPAddress local_IP(192,168,54,110); //use this IP
   bool staticIP = false;  // true;  //toggle for dynamic IP
 //static IP  
 
@@ -60,7 +94,7 @@ int root = 0; //initialize for root
 
 //Debug and MIDI output Settings ********
 byte debugSerial = 1; //debugging serial messages
-byte rawSerial = 0; // raw biodata stream via serial data
+byte rawSerial = 1; // raw biodata stream via serial data
 byte serialMIDI = 1; //write serial data to MIDI hardware output
 byte wifiMIDI = 0; //do all the fancy wifi stuff and RTP MIDI over AppleMIDI
 byte bleMIDI = 1; //bluetooth midi
@@ -411,8 +445,8 @@ void setupWifi(){
 
   //connect with static IP
 
-  IPAddress gateway(192,168,68,1);
-  IPAddress dns(192,168,68,1);
+  IPAddress gateway(192,168,0,1);
+  IPAddress dns(192,168,0,1);
   IPAddress subnet(255,255,255,0);
   if(staticIP) {
     if(!WiFi.config(local_IP,dns, gateway,subnet)) {
