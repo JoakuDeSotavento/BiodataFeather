@@ -31,14 +31,27 @@
 
 #include <WiFi.h>
 #include <WiFiUdp.h>
-#include <OSCMessage.h>
+
+
+// Wifi Credentials ~~~~~~~~~~~!!!!
+
+char ssid[] = "lattice";              //  your network SSID (name)
+char pass[] = "joakinator16180";      // your network password (use for WPA, or use as key for WEP)
+                                      // ~~~~~~~~~~~~~!!!!
+                                      //  Set the MIDI Channel of this node
+byte channel = 1;                     //
+IPAddress local_IP(192, 168, 1, 35);  //use this IP
+bool staticIP = false;                // true;  //toggle for dynamic IP
+//static IP
 
 // Configuración OSC
+
+#include <OSCMessage.h>
+
 const char *oscIP = "192.168.1.35";  // Dirección IP de destino
 const int oscPort = 8000;            // Puerto de destino
 
 WiFiUDP Udp;
-
 
 void sendOSCMessage(int _averg, float _stdevi, int _threshold, int _delta, int _change) {
   OSCMessage msg("/rawSig");
@@ -53,16 +66,54 @@ void sendOSCMessage(int _averg, float _stdevi, int _threshold, int _delta, int _
   msg.empty();  // Limpia el mensaje
 }
 
-// Wifi Credentials ~~~~~~~~~~~!!!!
+// Configuración Firebase database
 
-char ssid[] = "lattice";              //  your network SSID (name)
-char pass[] = "joakinator16180";      // your network password (use for WPA, or use as key for WEP)
-                                      // ~~~~~~~~~~~~~!!!!
-                                      //  Set the MIDI Channel of this node
-byte channel = 1;                     //
-IPAddress local_IP(192, 168, 1, 35);  //use this IP
-bool staticIP = false;                // true;  //toggle for dynamic IP
-//static IP
+//#include <Arduino.h> //No he visto que estuviera cargada pero debería, no?
+//#include <WiFi.h> Ya cargada previamente
+#include <Firebase_ESP_Client.h>
+
+//Provide the token generation process info.
+#include "addons/TokenHelper.h"
+//Provide the RTDB payload printing info and other helper functions.
+#include "addons/RTDBHelper.h"
+
+
+// Insert your network credentials
+//#define WIFI_SSID "b1t"
+//#define WIFI_PASSWORD "1nt3rn3t"
+
+// Insert Firebase project API Key
+#define API_KEY "AIzaSyDKZgNWgE3NOyCs9fd8XRIRx5wLCS35Evg"
+
+// Insert RTDB URLefine the RTDB URL */
+#define DATABASE_URL "https://forestdata-5de46-default-rtdb.europe-west1.firebasedatabase.app/" 
+
+//Define Firebase Data object
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+unsigned long sendDataPrevMillis = 0;
+int count = 0;
+bool signupOK = false;
+
+// Código del ejemplo que no es necesario
+
+//Serial.begin(115200);
+//WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+//WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+//Serial.print("Connecting to Wi-Fi");
+/*while (WiFi.status() != WL_CONNECTED){
+  Serial.print(".");
+  delay(300);
+}
+Serial.println();
+Serial.print("Connected with IP: ");
+Serial.println(WiFi.localIP());
+Serial.println();*/
+
+// La inicialización de firebase la bajo una vez conectado al wifi **FB initialization**
+
 
 //MIDI Note and Controls
 const byte polyphony = 5;  // 1; //mono  // number of notes to track at a given time
@@ -85,8 +136,9 @@ int root = 0;  //initialize for root
 
 //Debug and MIDI output Settings ********
 byte debugSerial = 1;        //debugging serial messages
-byte rawSerial = 1;          // raw biodata stream via serial data
-byte oscOut = 1;
+byte rawSerial = 1;          //raw biodata stream via serial data
+byte rawOSC = 1;             //raw data stream to the local ip
+byte rawFB = 1;              //raw data stream to firebase database
 byte serialMIDI = 1;         //write serial data to MIDI hardware output
 byte wifiMIDI = 0;           //do all the fancy wifi stuff and RTP MIDI over AppleMIDI
 byte bleMIDI = 1;            //bluetooth midi
@@ -476,6 +528,31 @@ void setupWifi() {
     ledFaders[2].Set(ledFaders[2].maxBright, 0);  //turn on Green
     delay(1000);
     ledFaders[2].Set(0, 4000);  //fade out green LED
+
+    //**FB initialization**
+    if (rawFB) {
+      /* Assign the api key (required) */
+      config.api_key = API_KEY;
+
+      /* Assign the RTDB URL (required) */
+      config.database_url = DATABASE_URL;
+
+      /* Sign up */
+      if (Firebase.signUp(&config, &auth, "", "")){
+        Serial.println("ok");
+        signupOK = true;
+      }
+      else{
+        Serial.printf("%s\n", config.signer.signupError.message.c_str());
+      }
+
+      /* Assign the callback function for the long running token generation task */
+      config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
+
+      Firebase.begin(&config, &auth);
+      Firebase.reconnectWiFi(true);
+    }
+
   } else {
     if (debugSerial) Serial.println(F("WiFi NOT connected"));
     ledFaders[0].Set(ledFaders[0].maxBright, 0);  //turn on Red

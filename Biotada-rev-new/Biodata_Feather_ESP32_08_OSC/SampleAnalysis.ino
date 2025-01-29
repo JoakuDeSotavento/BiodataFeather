@@ -128,10 +128,10 @@ void analyzeSample() {
       Serial.println();  //end of raw data packet
     }
 
-    ///////////////oscOut data output by OSC //////////////////////////
+    ///////////////raw data output by OSC //////////////////////////
     //write a value ever rawSerialDelay milliseconds to slow down the data flow
     //    also write if a change is detected at any time!
-    if (oscOut && (change || (currentMillis > rawSerialTime + rawSerialDelay))) {
+    if (rawOSC && (change || (currentMillis > rawSerialTime + rawSerialDelay))) {
       rawSerialTime = currentMillis;  //reset timer
 
       int _averg = map(averg,0,600,0,100);
@@ -142,22 +142,81 @@ void analyzeSample() {
 
       // Function to send OSC
       sendOSCMessage(_averg, _stdevi, _threshold, _delta, _change);
-      /*
-      if(change) { // duration, velocity, note, CC
-        Serial.print(change*100); Serial.print(","); //change detected
-        Serial.print(setnote); Serial.print(","); //Note
-        Serial.print(vel); Serial.print(","); //Velocity
-        Serial.print(map(dur,100,5500,1,100)); Serial.print(","); //Duration //need to map this to values
-        Serial.print(ccValue);// Serial.print(","); //CC
-      }
-      else { //pad with 0's although this might be ugly...
-        Serial.print(0); Serial.print(","); //Change
-        Serial.print(0); Serial.print(","); //Note
-        Serial.print(0); Serial.print(","); //Velocity
-        Serial.print(0); Serial.print(","); //Duration
-        Serial.print(0); //Serial.print(","); //CC
-      }
-     */
+
+    }
+
+    ///////////////raw data output to a firebase database //////////////////////////
+    //write a value ever rawSerialDelay milliseconds to slow down the data flow
+    //    also write if a change is detected at any time!
+    if (rawFB && (change || (currentMillis > rawSerialTime + rawSerialDelay))) {
+      rawSerialTime = currentMillis;  //reset timer
+
+      int _averg = map(averg,0,600,0,100);
+      float _stdevi = stdevi;
+      int _threshold = map(constrain(threshold*stdevi,0,300),0,300,0,100);
+      int _delta = map(delta,0,300,0,100);
+      int _change = change * 90;
+
+      if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)){
+    sendDataPrevMillis = millis();
+
+    // Write average (int) on the database path biodataTest/average
+    if (Firebase.RTDB.setInt(&fbdo, "biodataTest/average", _averg)){
+      Serial.println("PASSED");
+      Serial.println("PATH: " + fbdo.dataPath());
+      Serial.println("TYPE: " + fbdo.dataType());
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+    
+    // Write standard deviation (float) on the database path biodataTest/stdevi
+    if (Firebase.RTDB.setFloat(&fbdo, "biodataTest/stdevi", _stdevi)){
+      Serial.println("PASSED");
+      Serial.println("PATH: " + fbdo.dataPath());
+      Serial.println("TYPE: " + fbdo.dataType());
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+
+    // Write threshold (int) on the database path biodataTest/threshold
+    if (Firebase.RTDB.setInt(&fbdo, "biodataTest/threshold", _threshold)){
+      Serial.println("PASSED");
+      Serial.println("PATH: " + fbdo.dataPath());
+      Serial.println("TYPE: " + fbdo.dataType());
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+
+    // Write delta (int) on the database path biodataTest/delta
+    if (Firebase.RTDB.setInt(&fbdo, "biodataTest/delta", _delta)){
+      Serial.println("PASSED");
+      Serial.println("PATH: " + fbdo.dataPath());
+      Serial.println("TYPE: " + fbdo.dataType());
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+
+    // Write change (int) on the database path biodataTest/change
+    if (Firebase.RTDB.setInt(&fbdo, "biodataTest/change", _change)){
+      Serial.println("PASSED");
+      Serial.println("PATH: " + fbdo.dataPath());
+      Serial.println("TYPE: " + fbdo.dataType());
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+
+  }
+
     }
 
     //reset array for next sample
