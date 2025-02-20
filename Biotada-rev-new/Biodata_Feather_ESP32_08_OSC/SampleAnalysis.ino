@@ -161,43 +161,40 @@ void analyzeSample() {
       if ((millis() - sendDataPrevMillis > 5000 || sendDataPrevMillis == 0)){
         sendDataPrevMillis = millis();
              
-        // Create a JSON document to hold the output data
+        // OPTION 1 NO HISTORIC DATA
+        //Create a JSON document to hold the output data
         /*JsonDocument docOutput;
-
         // Add various data types to the JSON document
         docOutput["average"] = _averg;
         docOutput["stdevi"] = _stdevi;
         docOutput["threshold"] = _threshold;
         docOutput["delta"] = _delta;
         docOutput["change"] = _change;
-        
         // Create a string to hold the serialized JSON data
         String output;
-
         // Optional: Shrink the JSON document to fit its contents exactly
         docOutput.shrinkToFit();
-
         // Serialize the JSON document to a string
         serializeJson(docOutput, output);
-
         // Set the serialized JSON data in Firebase
         fb.setJson("biodataTestFer", output);*/
-
-        fb.pushJson("biodataTestFerHistorico", 
+        
+        // OPTION 2 Trying to store HISTORIC DATA
+        // Push a JSON file to store historical data
+        if(fb.pushJson("biodataTestFerHistorico", 
             String("\"average\": ") + String(_averg) + 
             ", \"stdevi\": " + String(_stdevi) + 
             ", \"threshold\": " + String(_threshold) + 
             ", \"delta\": " + String(_delta) + 
             ", \"change\": " + String(_change)
-        );
-        /*if()
+        )){
           Serial.println("PASSED");
         }
         else {
           Serial.println("FAILED");
-          Serial.println("REASON: " + fbdo.errorReason());
-        }*/
-
+          //Serial.println("REASON: " + fb.errorReason());
+        }
+        
       }
 
     }
