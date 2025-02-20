@@ -35,7 +35,7 @@
                                       // ~~~~~~~~~~~~~!!!!
                                       //  Set the MIDI Channel of this node
 byte channel = 1;                     //
-IPAddress local_IP(192, 168, 1, 35);  //use this IP
+IPAddress local_IP(192, 168, 1, 36);  //use this IP
 bool staticIP = false;                // true;  //toggle for dynamic IP
 //static IP
 
