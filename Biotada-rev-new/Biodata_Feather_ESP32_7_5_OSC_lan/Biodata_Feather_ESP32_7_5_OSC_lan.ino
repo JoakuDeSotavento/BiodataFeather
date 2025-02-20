@@ -104,6 +104,8 @@ int noteMax = 96;         //C7  - keyboard note maximum
 byte controlNumber = 80;  //set to mappable control, low values may interfere with other soft synth controls!!
 unsigned long rawSerialTime = 0;
 int rawSerialDelay = 0;
+unsigned long oscRawSerialTime = 0;
+int oscRawSerialDelay = 0;
 // **************************************
 
 #include <EEPROM.h>

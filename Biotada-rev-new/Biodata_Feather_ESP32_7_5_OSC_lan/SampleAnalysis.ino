@@ -131,8 +131,8 @@ void analyzeSample() {
     ///////////////raw data output by OSC //////////////////////////
     //write a value ever rawSerialDelay milliseconds to slow down the data flow
     //    also write if a change is detected at any time!
-    if (rawOSC && (change || (currentMillis > rawSerialTime + rawSerialDelay))) {
-      rawSerialTime = currentMillis;  //reset timer
+    if (rawOSC && (change || (currentMillis > oscRawSerialTime + oscRawSerialDelay))) {
+      oscRawSerialTime = currentMillis;  //reset timer
 
       int _averg = map(averg,0,600,0,100);
       float _stdevi = stdevi;
