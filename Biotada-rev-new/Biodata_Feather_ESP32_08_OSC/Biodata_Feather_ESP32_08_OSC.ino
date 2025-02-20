@@ -32,11 +32,6 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
-
-// Wifi Credentials ~~~~~~~~~~~!!!!
-
-char ssid[] = "b1t";              //  your network SSID (name)
-char pass[] = "1nt3rn3t";      // your network password (use for WPA, or use as key for WEP)
                                       // ~~~~~~~~~~~~~!!!!
                                       //  Set the MIDI Channel of this node
 byte channel = 1;                     //
@@ -66,54 +61,21 @@ void sendOSCMessage(int _averg, float _stdevi, int _threshold, int _delta, int _
   msg.empty();  // Limpia el mensaje
 }
 
-// Configuración Firebase database
-
-//#include <Arduino.h> //No he visto que estuviera cargada pero debería, no?
-//#include <WiFi.h> Ya cargada previamente
-#include <Firebase_ESP_Client.h>
-
-//Provide the token generation process info.
-#include "addons/TokenHelper.h"
-//Provide the RTDB payload printing info and other helper functions.
-#include "addons/RTDBHelper.h"
-
-
-// Insert your network credentials
-//#define WIFI_SSID "b1t"
-//#define WIFI_PASSWORD "1nt3rn3t"
-
-// Insert Firebase project API Key
-#define API_KEY "AIzaSyDKZgNWgE3NOyCs9fd8XRIRx5wLCS35Evg"
-
-// Insert RTDB URLefine the RTDB URL */
-#define DATABASE_URL "https://forestdata-5de46-default-rtdb.europe-west1.firebasedatabase.app/" 
-
-//Define Firebase Data object
-FirebaseData fbdo;
-FirebaseAuth auth;
-FirebaseConfig config;
-
 unsigned long sendDataPrevMillis = 0;
 int count = 0;
 bool signupOK = false;
 
-// Código del ejemplo que no es necesario
+// Configuración Firebase database
 
-//Serial.begin(115200);
-//WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-//WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-//Serial.print("Connecting to Wi-Fi");
-/*while (WiFi.status() != WL_CONNECTED){
-  Serial.print(".");
-  delay(300);
-}
-Serial.println();
-Serial.print("Connected with IP: ");
-Serial.println(WiFi.localIP());
-Serial.println();*/
+#include "secrets.h"
+#include <Firebase.h>
+#include <ArduinoJson.h>
 
-// La inicialización de firebase la bajo una vez conectado al wifi **FB initialization**
+/* Use the following instance for Test Mode (No Authentication) */
+Firebase fb(REFERENCE_URL);
 
+/* Use the following instance for Locked Mode (With Authentication) */
+// Firebase fb(REFERENCE_URL, AUTH_TOKEN);
 
 //MIDI Note and Controls
 const byte polyphony = 5;  // 1; //mono  // number of notes to track at a given time
@@ -494,13 +456,13 @@ void setupWifi() {
 
   if (debugSerial) {
     Serial.print(F("Connecting to Wifi Network: "));
-    Serial.print(ssid);
+    Serial.print(WIFI_SSID);
     Serial.print(F("  pass: "));
-    Serial.print(pass);
+    Serial.print(WIFI_PASSWORD);
     Serial.println();
   }
 
-  WiFi.begin(ssid, pass);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   //could get 'stuck' here if we can't connect ... hmm..
   //timeout after some duration  to allow Serial MIDI or
@@ -528,30 +490,6 @@ void setupWifi() {
     ledFaders[2].Set(ledFaders[2].maxBright, 0);  //turn on Green
     delay(1000);
     ledFaders[2].Set(0, 4000);  //fade out green LED
-
-    //**FB initialization**
-    if (rawFB) {
-      /* Assign the api key (required) */
-      config.api_key = API_KEY;
-
-      /* Assign the RTDB URL (required) */
-      config.database_url = DATABASE_URL;
-
-      /* Sign up */
-      if (Firebase.signUp(&config, &auth, "", "")){
-        Serial.println("ok");
-        signupOK = true;
-      }
-      else{
-        Serial.printf("%s\n", config.signer.signupError.message.c_str());
-      }
-
-      /* Assign the callback function for the long running token generation task */
-      config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
-
-      Firebase.begin(&config, &auth);
-      Firebase.reconnectWiFi(true);
-    }
 
   } else {
     if (debugSerial) Serial.println(F("WiFi NOT connected"));

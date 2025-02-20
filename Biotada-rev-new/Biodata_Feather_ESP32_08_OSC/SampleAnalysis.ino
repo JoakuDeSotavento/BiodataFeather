@@ -157,63 +157,46 @@ void analyzeSample() {
       int _delta = map(delta,0,300,0,100);
       int _change = change * 90;
 
-      if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)){
+
+      if ((millis() - sendDataPrevMillis > 5000 || sendDataPrevMillis == 0)){
         sendDataPrevMillis = millis();
+             
+        // Create a JSON document to hold the output data
+        /*JsonDocument docOutput;
 
-        // Write average (int) on the database path biodataTest/average
-        if (Firebase.RTDB.setInt(&fbdo, "biodataTest/average", _averg)){
-          Serial.println("PASSED");
-          Serial.println("PATH: " + fbdo.dataPath());
-          Serial.println("TYPE: " + fbdo.dataType());
-        }
-        else {
-          Serial.println("FAILED");
-          Serial.println("REASON: " + fbdo.errorReason());
-        }
+        // Add various data types to the JSON document
+        docOutput["average"] = _averg;
+        docOutput["stdevi"] = _stdevi;
+        docOutput["threshold"] = _threshold;
+        docOutput["delta"] = _delta;
+        docOutput["change"] = _change;
         
-        // Write standard deviation (float) on the database path biodataTest/stdevi
-        if (Firebase.RTDB.setFloat(&fbdo, "biodataTest/stdevi", _stdevi)){
-          Serial.println("PASSED");
-          Serial.println("PATH: " + fbdo.dataPath());
-          Serial.println("TYPE: " + fbdo.dataType());
-        }
-        else {
-          Serial.println("FAILED");
-          Serial.println("REASON: " + fbdo.errorReason());
-        }
+        // Create a string to hold the serialized JSON data
+        String output;
 
-        // Write threshold (int) on the database path biodataTest/threshold
-        if (Firebase.RTDB.setInt(&fbdo, "biodataTest/threshold", _threshold)){
-          Serial.println("PASSED");
-          Serial.println("PATH: " + fbdo.dataPath());
-          Serial.println("TYPE: " + fbdo.dataType());
-        }
-        else {
-          Serial.println("FAILED");
-          Serial.println("REASON: " + fbdo.errorReason());
-        }
+        // Optional: Shrink the JSON document to fit its contents exactly
+        docOutput.shrinkToFit();
 
-        // Write delta (int) on the database path biodataTest/delta
-        if (Firebase.RTDB.setInt(&fbdo, "biodataTest/delta", _delta)){
-          Serial.println("PASSED");
-          Serial.println("PATH: " + fbdo.dataPath());
-          Serial.println("TYPE: " + fbdo.dataType());
-        }
-        else {
-          Serial.println("FAILED");
-          Serial.println("REASON: " + fbdo.errorReason());
-        }
+        // Serialize the JSON document to a string
+        serializeJson(docOutput, output);
 
-        // Write change (int) on the database path biodataTest/change
-        if (Firebase.RTDB.setInt(&fbdo, "biodataTest/change", _change)){
+        // Set the serialized JSON data in Firebase
+        fb.setJson("biodataTestFer", output);*/
+
+        fb.pushJson("biodataTestFerHistorico", 
+            String("\"average\": ") + String(_averg) + 
+            ", \"stdevi\": " + String(_stdevi) + 
+            ", \"threshold\": " + String(_threshold) + 
+            ", \"delta\": " + String(_delta) + 
+            ", \"change\": " + String(_change)
+        );
+        /*if()
           Serial.println("PASSED");
-          Serial.println("PATH: " + fbdo.dataPath());
-          Serial.println("TYPE: " + fbdo.dataType());
         }
         else {
           Serial.println("FAILED");
           Serial.println("REASON: " + fbdo.errorReason());
-        }
+        }*/
 
       }
 
