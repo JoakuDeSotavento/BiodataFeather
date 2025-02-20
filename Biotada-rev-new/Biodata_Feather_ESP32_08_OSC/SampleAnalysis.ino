@@ -158,64 +158,64 @@ void analyzeSample() {
       int _change = change * 90;
 
       if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 15000 || sendDataPrevMillis == 0)){
-    sendDataPrevMillis = millis();
+        sendDataPrevMillis = millis();
 
-    // Write average (int) on the database path biodataTest/average
-    if (Firebase.RTDB.setInt(&fbdo, "biodataTest/average", _averg)){
-      Serial.println("PASSED");
-      Serial.println("PATH: " + fbdo.dataPath());
-      Serial.println("TYPE: " + fbdo.dataType());
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
-    
-    // Write standard deviation (float) on the database path biodataTest/stdevi
-    if (Firebase.RTDB.setFloat(&fbdo, "biodataTest/stdevi", _stdevi)){
-      Serial.println("PASSED");
-      Serial.println("PATH: " + fbdo.dataPath());
-      Serial.println("TYPE: " + fbdo.dataType());
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
+        // Write average (int) on the database path biodataTest/average
+        if (Firebase.RTDB.setInt(&fbdo, "biodataTest/average", _averg)){
+          Serial.println("PASSED");
+          Serial.println("PATH: " + fbdo.dataPath());
+          Serial.println("TYPE: " + fbdo.dataType());
+        }
+        else {
+          Serial.println("FAILED");
+          Serial.println("REASON: " + fbdo.errorReason());
+        }
+        
+        // Write standard deviation (float) on the database path biodataTest/stdevi
+        if (Firebase.RTDB.setFloat(&fbdo, "biodataTest/stdevi", _stdevi)){
+          Serial.println("PASSED");
+          Serial.println("PATH: " + fbdo.dataPath());
+          Serial.println("TYPE: " + fbdo.dataType());
+        }
+        else {
+          Serial.println("FAILED");
+          Serial.println("REASON: " + fbdo.errorReason());
+        }
 
-    // Write threshold (int) on the database path biodataTest/threshold
-    if (Firebase.RTDB.setInt(&fbdo, "biodataTest/threshold", _threshold)){
-      Serial.println("PASSED");
-      Serial.println("PATH: " + fbdo.dataPath());
-      Serial.println("TYPE: " + fbdo.dataType());
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
+        // Write threshold (int) on the database path biodataTest/threshold
+        if (Firebase.RTDB.setInt(&fbdo, "biodataTest/threshold", _threshold)){
+          Serial.println("PASSED");
+          Serial.println("PATH: " + fbdo.dataPath());
+          Serial.println("TYPE: " + fbdo.dataType());
+        }
+        else {
+          Serial.println("FAILED");
+          Serial.println("REASON: " + fbdo.errorReason());
+        }
 
-    // Write delta (int) on the database path biodataTest/delta
-    if (Firebase.RTDB.setInt(&fbdo, "biodataTest/delta", _delta)){
-      Serial.println("PASSED");
-      Serial.println("PATH: " + fbdo.dataPath());
-      Serial.println("TYPE: " + fbdo.dataType());
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
+        // Write delta (int) on the database path biodataTest/delta
+        if (Firebase.RTDB.setInt(&fbdo, "biodataTest/delta", _delta)){
+          Serial.println("PASSED");
+          Serial.println("PATH: " + fbdo.dataPath());
+          Serial.println("TYPE: " + fbdo.dataType());
+        }
+        else {
+          Serial.println("FAILED");
+          Serial.println("REASON: " + fbdo.errorReason());
+        }
 
-    // Write change (int) on the database path biodataTest/change
-    if (Firebase.RTDB.setInt(&fbdo, "biodataTest/change", _change)){
-      Serial.println("PASSED");
-      Serial.println("PATH: " + fbdo.dataPath());
-      Serial.println("TYPE: " + fbdo.dataType());
-    }
-    else {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + fbdo.errorReason());
-    }
+        // Write change (int) on the database path biodataTest/change
+        if (Firebase.RTDB.setInt(&fbdo, "biodataTest/change", _change)){
+          Serial.println("PASSED");
+          Serial.println("PATH: " + fbdo.dataPath());
+          Serial.println("TYPE: " + fbdo.dataType());
+        }
+        else {
+          Serial.println("FAILED");
+          Serial.println("REASON: " + fbdo.errorReason());
+        }
 
-  }
+      }
 
     }
 
