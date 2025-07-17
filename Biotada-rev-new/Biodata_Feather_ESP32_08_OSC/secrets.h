@@ -6,11 +6,11 @@
 
 // Wifi Credentials ~~~~~~~~~~~!!!!
 
-char ssid[] = "NERV";              //  your network SSID (name)
-char pass[] = "24092010";      // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "b1t";              //  your network SSID (name)
+char pass[] = "1nt3rn3t";      // your network password (use for WPA, or use as key for WEP)
 
-#define WIFI_SSID     "NERV"
-#define WIFI_PASSWORD "24092010"
+#define WIFI_SSID     "b1t"
+#define WIFI_PASSWORD "1nt3rn3t"
 
 /*
 
