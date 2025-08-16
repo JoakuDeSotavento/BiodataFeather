@@ -1,0 +1,234 @@
+[
+    {
+        "id": "3b19fc5f0936dfe4",
+        "type": "tab",
+        "label": "BiodataFeather Integrated",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "mqtt_in",
+        "type": "mqtt in",
+        "z": "3b19fc5f0936dfe4",
+        "name": "Biodata Sensors",
+        "topic": "biodata/sensors/#",
+        "qos": "1",
+        "datatype": "json",
+        "broker": "115279ded1eadc0e",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 230,
+        "y": 260,
+        "wires": [
+            [
+                "to_influx",
+                "debug_raw"
+            ]
+        ]
+    },
+    {
+        "id": "to_influx",
+        "type": "function",
+        "z": "3b19fc5f0936dfe4",
+        "name": "Preparar línea Influx",
+        "func": "const device = msg.topic.split('/')[2]; // biodata/sensors/biodata1 -> biodata1\nconst d = msg.payload;\n\n// Verificar que los datos sean válidos\nif (!d || typeof d !== 'object') {\n    node.warn('Datos inválidos recibidos: ' + JSON.stringify(msg.payload));\n    return null;\n}\n\nmsg.payload = [\n  {\n    measurement: \"biodata_sensors\",\n    tags: {\n      sensor: device || 'unknown',\n      location: 'outdoor'\n    },\n    fields: {\n      temperatura: parseFloat(d.temperatura) || 0,\n      presion: parseFloat(d.presion) || 0,\n      humedad: parseFloat(d.humedad) || 0,\n      gas: parseFloat(d.gas) || 0,\n      altitud: parseFloat(d.altitud) || 0,\n      altitudCalibrada: parseFloat(d.altitudCalibrada) || 0,\n      visible_ir: parseInt(d.visible_ir) || 0,\n      infrarrojo: parseInt(d.infrarrojo) || 0\n    },\n    timestamp: Date.now()\n  }\n];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 260,
+        "wires": [
+            [
+                "influx_out",
+                "debug_processed"
+            ]
+        ]
+    },
+    {
+        "id": "influx_out",
+        "type": "influxdb out",
+        "z": "3b19fc5f0936dfe4",
+        "influxdb": "988b59205a7a90db",
+        "name": "A InfluxDB",
+        "measurement": "biodata_sensors",
+        "precision": "ms",
+        "retentionPolicy": "",
+        "database": "",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "MolinoLab",
+        "bucket": "environmental",
+        "x": 670,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "debug_raw",
+        "type": "debug",
+        "z": "3b19fc5f0936dfe4",
+        "name": "Debug Raw MQTT",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 450,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "debug_processed",
+        "type": "debug",
+        "z": "3b19fc5f0936dfe4",
+        "name": "Debug Processed",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "mqtt_control",
+        "type": "mqtt in",
+        "z": "3b19fc5f0936dfe4",
+        "name": "Control Commands",
+        "topic": "biodata/control/#",
+        "qos": "1",
+        "datatype": "json",
+        "broker": "115279ded1eadc0e",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 230,
+        "y": 400,
+        "wires": [
+            [
+                "debug_control"
+            ]
+        ]
+    },
+    {
+        "id": "debug_control",
+        "type": "debug",
+        "z": "3b19fc5f0936dfe4",
+        "name": "Debug Control",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 450,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "test_button",
+        "type": "inject",
+        "z": "3b19fc5f0936dfe4",
+        "name": "Test Command",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"threshold\": 5, \"scale\": 2, \"midi_channel\": 3}",
+        "payloadType": "json",
+        "x": 120,
+        "y": 500,
+        "wires": [
+            [
+                "mqtt_test"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt_test",
+        "type": "mqtt out",
+        "z": "3b19fc5f0936dfe4",
+        "name": "Send Test Command",
+        "topic": "biodata/control/biodata1",
+        "qos": "1",
+        "retain": false,
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "115279ded1eadc0e",
+        "x": 350,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "115279ded1eadc0e",
+        "type": "mqtt-broker",
+        "name": "Mosquitto",
+        "broker": "mqt.sinfoniabiotica.xyz",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": "",
+        "credentials": {
+            "user": "biodata",
+            "password": "b10d4t4?"
+        }
+    },
+    {
+        "id": "988b59205a7a90db",
+        "type": "influxdb",
+        "hostname": "influxdb",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "InfluxDB Sinfonia biótica",
+        "usetls": true,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://influxdb:8086",
+        "timeout": 10,
+        "rejectUnauthorized": false
+    }
+]

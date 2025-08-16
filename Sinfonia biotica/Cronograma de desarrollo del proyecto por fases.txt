@@ -1,0 +1,32 @@
+
+CRONOGRAMA DE DESARROLLO DEL PROYECTO POR FASES
+
+SOLICITANTE:	Fernando Fernández Sánchez	TÍTULO DEL PROYECTO: Sinfonía Biótica: Organismos en red
+
+Denominación de la fase	Fechas previstas
+(deben estar dentro del periodo de ejecución de la convocatoria)	Principales actuaciones a realizar en esta fase
+ (deben corresponder a actuaciones descritas en la memoria del proyecto)	Cuantía del gasto en esta fase
+Preproducción	Enero – mayo 2025	Compra de equipamiento sonoro
+Identificación y grabación de árboles y hongos
+Fabricación de biodatas en red	7.400,00 €
+Producción	Marzo – octubre 2025	Diseño sonoro
+Programación de nuevas funcionalidades e interacciones
+Base de datos online para datos en tiempo real y API
+Instalación y testeo de funcionamiento de dispositivos en tiempo real
+Postprocesado de vídeos y creación de modelos 3D
+Integración de los nuevos árboles y hongos en la experiencia
+Fabricación de los centinelas del bosque
+Creación de prototipo háptico para recibir datos en tiempo real	16.980,00 €
+Publicación	Mayo – octubre 2025	Directorio de árboles online con datos abiertos y accesibles
+Estudio de usabilidad	2.700,00 €
+Comunicación	Enero – diciembre 2025	Publicidad en redes
+Presentación en eventos internacionales
+Presentación a concursos
+Edición y publicación de vídeos
+Documentación del proceso, grabación de videos	4.320,00 €
+
+SUMA TOTAL DE GASTOS DE TODAS LAS FASES
+(debe coincidir con el TOTAL DE GASTOS del RESUMEN DE GASTOS del presupuesto)
+	31.400,00 €
+
+	

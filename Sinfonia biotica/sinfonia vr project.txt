@@ -1,0 +1,16 @@
+Experiencia inmersiva de realidad virtual interactiva interespecie, en la que humanos y organismos no animales colaborarán en la creación de una pieza audiovisual única.
+
+Una serie de plantas reales (árboles singulares) digitalizadas en nubes de puntos y el registro de sus impulsos eléctricos, generarán la pieza sonora
+
+Los movimientos y voz de la persona con el headseat crearán una pieza se combinarán con los impulsos eléctricos de las plantas para crear esta pieza única. Exploramos una realidad virtual donde humanos y árboles co-crean piezas audiovisuales únicas. Digitalizamos árboles emblemáticos en España como nubes de puntos, cada uno generando colaborativamente piezas visuales y sonoras.
+
+En esta experiencia se rompe la barrera entre espectador y creador. Los movimientos y acciones de la persona con el headset crearán en tiempo real el paisaje sonoro y visual de la pieza. Se registrarán 48h de actividad eléctrica de los árboles seleccionados y se digitalizarán utilizando técnicas de gaussian splatting. La nube de puntos resultado de esta digitalización será alterada en tiempo real por los impulsos eléctricos registrados previamente y éstos también dispararán los distintos sonidos generados dentro del diseño sonoro. Como resultado, ser humano y árbol serán creadores de la pieza audiovisual que nunca se repetirá del mismo modo, dependerá de la hora del día, de la actividad eléctrica de la planta, intensidad de los movimientos de la persona con el headset.
+# Técnicamente
+ Crear una experiencia en unreal engine para 
+
+
+# Preguntas para Mayda
+
+- ¿Cómo autofacturo a mi mismo?
+- Declaración intracomunitarias
+ 

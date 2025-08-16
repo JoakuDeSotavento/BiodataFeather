@@ -1,0 +1,274 @@
+{
+  "id": "biodata-feather-flow",
+  "label": "BiodataFeather Sensors",
+  "nodes": [
+    {
+      "id": "mqtt_in",
+      "type": "mqtt in",
+      "name": "Biodata Sensors",
+      "topic": "biodata/sensors/#",
+      "qos": 1,
+      "broker": "mqtt_broker",
+      "x": 120,
+      "y": 100
+    },
+    {
+      "id": "json_parse",
+      "type": "json",
+      "name": "Parse JSON",
+      "property": "payload",
+      "x": 320,
+      "y": 100
+    },
+    {
+      "id": "influxdb_out",
+      "type": "influxdb out",
+      "name": "Save to InfluxDB",
+      "influxdb": "influxdb_config",
+      "measurement": "biodata_sensors",
+      "precision": "ms",
+      "retentionPolicy": "",
+      "database": "biodata",
+      "x": 520,
+      "y": 100
+    },
+    {
+      "id": "dashboard_chart",
+      "type": "ui_chart",
+      "name": "Temperature Chart",
+      "group": "Biodata Sensors",
+      "order": 1,
+      "width": "12",
+      "height": "8",
+      "chartType": "line",
+      "legend": "true",
+      "xformat": "HH:mm:ss",
+      "yformat": ".2f",
+      "x": 720,
+      "y": 60
+    },
+    {
+      "id": "dashboard_chart_2",
+      "type": "ui_chart",
+      "name": "Humidity Chart",
+      "group": "Biodata Sensors",
+      "order": 2,
+      "width": "12",
+      "height": "8",
+      "chartType": "line",
+      "legend": "true",
+      "xformat": "HH:mm:ss",
+      "yformat": ".2f",
+      "x": 720,
+      "y": 140
+    },
+    {
+      "id": "dashboard_gauge",
+      "type": "ui_gauge",
+      "name": "Temperature Gauge",
+      "group": "Biodata Sensors",
+      "order": 3,
+      "width": "6",
+      "height": "4",
+      "gtype": "gage",
+      "title": "Temperature (°C)",
+      "min": 0,
+      "max": 50,
+      "colors": [
+        "#00b500",
+        "#e6e600",
+        "#ca3838"
+      ],
+      "seg1": "20",
+      "seg2": "35",
+      "x": 720,
+      "y": 220
+    },
+    {
+      "id": "dashboard_gauge_2",
+      "type": "ui_gauge",
+      "name": "Humidity Gauge",
+      "group": "Biodata Sensors",
+      "order": 4,
+      "width": "6",
+      "height": "4",
+      "gtype": "gage",
+      "title": "Humidity (%)",
+      "min": 0,
+      "max": 100,
+      "colors": [
+        "#ca3838",
+        "#e6e600",
+        "#00b500"
+      ],
+      "seg1": "30",
+      "seg2": "70",
+      "x": 920,
+      "y": 220
+    },
+    {
+      "id": "dashboard_text",
+      "type": "ui_text",
+      "name": "Sensor Info",
+      "group": "Biodata Sensors",
+      "order": 5,
+      "width": "12",
+      "height": "4",
+      "format": "{{msg.payload.sensor}} - {{msg.payload.timestamp | date:'HH:mm:ss'}}",
+      "x": 720,
+      "y": 300
+    },
+    {
+      "id": "function_format_temp",
+      "type": "function",
+      "name": "Format Temperature",
+      "func": "msg.payload = {\n    value: msg.payload.temperatura,\n    timestamp: new Date(msg.payload.timestamp)\n};\nreturn msg;",
+      "outputs": 1,
+      "x": 520,
+      "y": 60
+    },
+    {
+      "id": "function_format_hum",
+      "type": "function",
+      "name": "Format Humidity",
+      "func": "msg.payload = {\n    value: msg.payload.humedad,\n    timestamp: new Date(msg.payload.timestamp)\n};\nreturn msg;",
+      "outputs": 1,
+      "x": 520,
+      "y": 140
+    },
+    {
+      "id": "function_format_gas",
+      "type": "function",
+      "name": "Format Gas",
+      "func": "msg.payload = {\n    value: msg.payload.gas,\n    timestamp: new Date(msg.payload.timestamp)\n};\nreturn msg;",
+      "outputs": 1,
+      "x": 520,
+      "y": 180
+    },
+    {
+      "id": "dashboard_chart_3",
+      "type": "ui_chart",
+      "name": "Gas Resistance",
+      "group": "Biodata Sensors",
+      "order": 6,
+      "width": "12",
+      "height": "8",
+      "chartType": "line",
+      "legend": "true",
+      "xformat": "HH:mm:ss",
+      "yformat": ".0f",
+      "x": 720,
+      "y": 180
+    },
+    {
+      "id": "mqtt_control",
+      "type": "mqtt in",
+      "name": "Control Commands",
+      "topic": "biodata/control/#",
+      "qos": 1,
+      "broker": "mqtt_broker",
+      "x": 120,
+      "y": 200
+    },
+    {
+      "id": "function_log_control",
+      "type": "function",
+      "name": "Log Control",
+      "func": "node.log('Control command received: ' + JSON.stringify(msg.payload));\nreturn msg;",
+      "outputs": 1,
+      "x": 320,
+      "y": 200
+    },
+    {
+      "id": "dashboard_button",
+      "type": "ui_button",
+      "name": "Send Test Command",
+      "group": "Biodata Control",
+      "order": 1,
+      "width": "6",
+      "height": "2",
+      "payload": "{\"threshold\": 5}",
+      "payloadType": "json",
+      "topic": "biodata/control/test",
+      "x": 120,
+      "y": 300
+    },
+    {
+      "id": "mqtt_test_out",
+      "type": "mqtt out",
+      "name": "Send Control",
+      "topic": "biodata/control/test",
+      "qos": 1,
+      "retain": false,
+      "broker": "mqtt_broker",
+      "x": 320,
+      "y": 300
+    }
+  ],
+  "configs": [
+    {
+      "id": "mqtt_broker",
+      "type": "mqtt-broker",
+      "name": "MQTT Broker",
+      "broker": "localhost",
+      "port": 1883,
+      "clientid": "",
+      "usetls": false,
+      "compatmode": true,
+      "keepalive": "60",
+      "cleansession": true,
+      "birthTopic": "",
+      "birthQos": "0",
+      "birthPayload": "",
+      "closeTopic": "",
+      "closeQos": "0",
+      "closePayload": "",
+      "willTopic": "",
+      "willQos": "0",
+      "willPayload": ""
+    },
+    {
+      "id": "influxdb_config",
+      "type": "influxdb",
+      "name": "InfluxDB",
+      "hostname": "localhost",
+      "port": "8086",
+      "protocol": "http",
+      "database": "biodata",
+      "name_": "biodata",
+      "usetls": false,
+      "tls": "",
+      "influxdbVersion": "1.x",
+      "url": "http://localhost:8086",
+      "rejectUnauthorized": false
+    }
+  ],
+  "groups": [
+    {
+      "id": "biodata_sensors_group",
+      "name": "Biodata Sensors",
+      "tab": "biodata_tab",
+      "width": "12",
+      "height": "12",
+      "collapse": false,
+      "outputs": 0
+    },
+    {
+      "id": "biodata_control_group",
+      "name": "Biodata Control",
+      "tab": "biodata_tab",
+      "width": "6",
+      "height": "6",
+      "collapse": false,
+      "outputs": 0
+    }
+  ],
+  "tabs": [
+    {
+      "id": "biodata_tab",
+      "label": "BiodataFeather",
+      "disabled": false,
+      "icon": "dashboard"
+    }
+  ]
+}

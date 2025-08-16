@@ -1,0 +1,72 @@
+Chat con GPT: https://chatgpt.com/share/6877ce73-67f4-800d-aca3-4d6bc465749c
+### Backup programación
+
+void sendToNodeRED(float temp, float pres, float hum, float gas, float alt, float altCal, int vis, int ir) {
+
+  if (WiFi.status() == WL_CONNECTED) {
+
+    WiFiClientSecure client;
+
+    client.setInsecure();  // ⚠️ Desactiva validación del certificado, ideal solo para pruebas
+
+  
+
+    HTTPClient https;
+
+    if (https.begin(client, "https://node.sinfoniabiotica.xyz/biodata")) {
+
+      https.addHeader("Content-Type", "application/json");
+
+  
+
+      String payload = "{";
+
+      payload += "\"temperatura\":" + String(temp, 2) + ",";
+
+      payload += "\"presion\":" + String(pres) + ",";
+
+      payload += "\"humedad\":" + String(hum, 2) + ",";
+
+      payload += "\"gas\":" + String(gas) + ",";
+
+      payload += "\"altitud\":" + String(alt, 2) + ",";
+
+      payload += "\"altitudCalibrada\":" + String(altCal, 2) + ",";
+
+      payload += "\"visible_ir\":" + String(vis) + ",";
+
+      payload += "\"infrarrojo\":" + String(ir) + ",";
+
+      payload += "\"sensor\":\"esp32\"";
+
+      payload += "}";
+
+  
+
+      int response = https.POST(payload);
+
+      Serial.print("Node-RED response: ");
+
+      Serial.println(response);
+
+      if (response > 0) {
+
+        Serial.println(https.getString());
+
+      }
+
+      https.end();
+
+    } else {
+
+      Serial.println("Error al conectar con Node-RED por HTTPS");
+
+    }
+
+  } else {
+
+    Serial.println("WiFi no conectado, no se pueden enviar datos a Node-RED.");
+
+  }
+
+}

@@ -1,0 +1,322 @@
+	
+ 
+	
+
+
+
+
+
+
+
+
+
+    1) Currículum Vitae del solicitante.
+
+
+
+
+
+       Resumen del proyecto Sinfonía biótica,
+financiado por esta ayuda en la edición de 2024
+A lo largo del año 2024 he desarrollado el proyecto “Sinfonía Biótica” realizado gracias a la ayuda para la promoción del sector del videojuego, pódcast y de otras formas de creación digital del año 2024.
+Resumen de Sinfonía biótica
+Sinfonía Biótica es un ecosistema creativo interespecie: una experiencia inmersiva de realidad virtual interactiva en la que humanos y plantas colaboran para crear una pieza audiovisual única.
+
+
+Cada organismo digitalizado actúa como un instrumento audiovisual dentro de esta sinfonía. Basándose en los datos generados por sus impulsos eléctricos, movimientos y sonidos, cada uno interpreta una parte de la composición sonora. Todos estos datos, se reflejan en el ámbito visual, creando una experiencia multisensorial.
+
+En esta experiencia se explora una realidad virtual donde humanos y árboles co-crean piezas audiovisuales únicas. Digitalizamos árboles emblemáticos de España en forma de nubes de puntos, cada uno contribuyendo colaborativamente al diseño visual y sonoro de la pieza.
+
+La barrera entre espectador y creador desaparece. Los movimientos y acciones de la persona con el headset generan, en tiempo real, el paisaje sonoro y visual. La actividad eléctrica de los árboles seleccionados, registrada durante horas y el cuerpo físico digitalizado mediante técnicas de _gaussian splatting_, se integra en estas nubes de puntos, que son alteradas en tiempo real por los datos previamente registrados. 
+
+Como resultado, ser humano y árbol se convierten en co-creadores de una pieza audiovisual irrepetible, cuya forma dependerá de factores como la hora del día, la actividad eléctrica de la planta y la intensidad de los movimientos de la persona en la experiencia.
+
+           Estado del proyecto
+Actualmente la experiencia en PC/VR se encuentra publicada con acceso anticipado y disponible desde la página web de Sinfonía biótica y a través de la plataforma Itch.io y en proceso de publicación en SteamWorks.
+El proyecto continúa en desarrollo, integrando la retroalimentación que recibimos de los beta testers y los primeros usuarios de la experiencia.
+La página web del proyecto con el acceso a la experiencia, la tecnología utilizada y la documentación se encuentra accesible a través del siguiente enlace:
+https://sinfoniabiotica.xyz
+               Aparición en medios de comunicación
+Han sido varios los medios de comunicación que se han hecho eco de esta experiencia de realidad virtual en varios reportajes y notas de prensa, a continuación las más relevantes:
+RTVE 2 – Culturas2 – Accesible en la plataforma de RTVE y el recorte en Youtube
+RTVE 2 – La Aventura del Saber – Reportaje de 15 minutos que será emitido el 8 de enero de 2025
+Castilla y León Televisión – Reportaje realizado en octubre de 2024 que será emitido a principios de 2025
+DmadridNoticias – En el apartado de Cultura – Sinfonía biótica, experiencia de realidad virtual interespecie
+DandalucíaNoticias – En el apartado de Cultura - Sinfonía biótica, realidad virtual con árboles
+
+               
+               Hitos de Sinfonía biótica durante 2024
+    • Durante el segundo trimestre de 2024 he actuado como coordinador y mentor técnico del proyecto “Biophony: dancing nature” durante la residencia financiada por el fondo “Culture moves europe” que permitió invitar a  nueve artístas de otros paises europeos a crear esta pieza.
+Durante este proyecto hemos fabricado y utilizado los dispositivos electrónicos de “Sinfonía Biótica” para recoger y analizar los impulsos eléctricos de plantas y hongos para crear una pieza performativa interespecie.
+
+https://www.lagacetadesalamanca.es/provincia/danza-plantas-nueve-paises-sancti-spiritus-20240526195910-ga.html
+    • En septiembre de 2024 he expuesto varias piezas artísticas, junto a otros artistas del colectivo Biophony,  en el Ars Electronica Festival, uno de los festivales más importantes de arte y tecnología así como de realidades aumentadas.
+https://molinolab.org/molinolab-en-el-ars-electronica-de-2024-linz-austria/
+    • En octubre de 2024 he expuesto una instalación interactiva interespecie, durante el BIME, el encuentro de la música en Bilbao. Una pieza interactiva para promocionar la experiencia de realidad virtual “Sinfonía Biótica”
+https://www.celulaculturelab.com/aslohacemos
+
+       Resumen de las experiencias relevantes más recientes: 
+- El 2 de octubre de 2024 participé en la primera edición de #BitsToKnow del observatorio Mondo Sonoro  con una charla performativa sobre live coding.
+https://www.mondosonoro.com/noticias-actualidad-musical/observatorio-mondo-sonoro-bitstoknow/
+- Obra presentada en Cineteca Matadero utilizando nubes de puntos e impulsos eléctricos de las plantas
+- Coordinación, formaciones y mentoría técnica de convivencias de arte y tecnologías desarrollados en MolinoLab con los alumnos de la Universidad Carlos III de Madrid – UC3M
+https://molinolab.org/convivencias-de-arte-y-tecnologia-con-la-uc3m/
+- Mentor técnico para el desarrollo de proyectos artísticos y tecnológicos en MediaLab Matadero durante los ciclos Medios sintientes, El sublime metabólico y Mentes sintéticas.
+- Formador y asesor tecnológico para los ciclos Máquina Orgánica en Teatros del Canal y Máquinas de Ingenio en Tabakalera Donosti.
+https://www.tabakalera.eus/es/maquinas-de-ingenio-jakintzen-bidegurutzean-exposicion
+
+https://www.interactivascollective.com/tech-alelopatia-rito-sonoro
+
+
+- Fundador y coordinador de proyectos y actividades en MolinoLab, centro de creación y experimentación artística.
+https://molinolab.org
+Portfolio de proyectos: 
+https://b1tdreamer.xyz
+           
+Experiencia profesional
+MolinoLab – Espacio de creación artística y cultural (2020 – actualidad) :
+Fundador, secretario general y coordinador de actividades y proyectos. 
+Fabricación digital y prototipado de soluciones tecnológicas con impresoras 3D, cortadoras láser, fresadoras CNC y brazos robóticos.
+Medialab Matadero (2021 - actualidad): 
+ Formador y mentor técnico en laboratorios colaborativos de prototipado Medios sintientes, El sublime metabólico y Mentes sintéticas. 
+Formador Externo (2015 – actualidad) :
+Impartición regular de formaciones sobre telecomunicaciones, sistemas de información y seguridad de datos para Action Against Hunger, Tabakalera.eus, Doctors of the World, Centro de emprendimiento Tormes+, Asprodes, Plan b internacional.
+Action Against Hunger (2013 – 2020)
+    • Coordinador de proyecto de tecnologías.
+Asegurar el correcto funcionamiento de las TIC en las misiones, fortaleciendo la integración de sistemas de información, la seguridad de datos y aumentando la alfabetización digital de los equipos.
+    • Coordinador de Proyectos TIC Análisis, diseño e implementación de proyectos tecnológicos dirigidos a intervenciones humanitarias. Coordinación de equipos multidisciplinarios para llevar a cabo proyectos de SIG, recopilación y análisis de datos, y seguridad de datos.
+    • Administrador de Microsoft SharePoint Migración y administración de la intranet de la organización basada en la plataforma Office365. 
+
+
+
+
+
+2)  Descripción del proyecto.
+  
+Sinfonía biótica: Organismos en red
+Introducción
+Durante 2024 hemos construido una prueba de concepto funcional e interesante, una experiencia interactiva atractiva y emocionante. El objetivo del proyecto para este año es que Sinfonía Biótica evolucione hacia una red de árboles conectados para la creación en tiempo real, construyendo una red de dispositivos de bajo consumo eléctrico que monitoricen una serie de árboles y envíen datos en tiempo real que serán consultados y utilizados para hacer la experiencia de realidad virtual única, ya que se utilizarán los datos generados por los árboles en ese mismo instante. 
+Esta información generada y de libre acceso permitirá hacer crecer Sinfonía biótica de forma exponencial, ya que se convertirá en una plataforma sobre la que otros creadores, artistas y desarrolladores puedan crear sus proyectos. Proyectos como instalaciones artísticas, monitorización de ejemplares en riesgo, sensibilización a escolares, prototipos base para estudios científicos, herramienta de trabajo para músicos, performers, etcétera.
+En cuanto a la experiencia de realidad virtual, hasta ahora hemos creado el primer movimiento de la Sinfonía Biótica, en la que podemos experimentar la creación audiovisual con diferentes plantas, en particular los árboles notables. En este segundo movimiento trabajaremos también con otro tipo de organismos, los hongos.
+Recopilando las lecciones aprendidas de este proceso y después de varios ejercicios de puesta en común e ideas de desarrollo, hemos definido los siguientes pasos del proyecto, que se agrupan en tres líneas de trabajo:
+
+    • Ampliación del proyecto
+    • Diseminación del proyecto
+    • Mejoras técnicas de la plataforma
+
+
+
+           Ampliación del proyecto
+Creación de la base de datos e integración de datos en tiempo real
+Hasta ahora, los impulsos electromagnéticos de las plantas se grababan en sesiones de 20 minutos a tres horas. Esta información pregrabada es la que, en la experiencia virtual, genera las notas y cambios visuales de los árboles, las melodías, los movimientos, etcétera.
+Por medio del análisis de los datos obtenidos y contrastando estos datos con grabaciones de 48 horas realizadas durante la residencia artística “Biophony”, hemos concluido que para que los datos sean realmente interesante y relevantes, la recopilación de datos debe realizarse en plazos mucho más amplios y hacer la correlación con las condiciones climáticas y ambientales en ese momento puntual.
+Por eso, uno de los objetivos de este año es la incorporación de experiencias en tiempo real que se sumarán a las que ya existen, aportando una mayor riqueza y variabilidad. 
+Se creará base de datos online que por un lado, recibirá los datos de los biodata conectados a los árboles. Por otro lado contendrá el histórico global de los datos, ofreciendo la posibilidad futura de utilizar herramientas de deep learning e inteligencia artificial para hacer análisis en tiempo real de los datos. Podremos hacer correlaciones entre eventos puntuales y la reacción de las plantas a diferentes cambios atmosféricos, medir la evolución de los diferentes organismos a los cambios meteorológicos, y su adaptación a ellos.
+Ampliación de funcionalidades del biodata
+Durante este año, mejoraremos el prototipo de biodata que nos permitirá recibir más datos de las plantas (temperatura, humedad, incidencia solar, electroconductividad de la tierra) y su envío  a la base de datos
+Al desarrollar nuevas funcionalidades en el proyecto libre biodata y publicar su documentación, cualquier persona interesada podrá comprar un kit, fabricarlo uno mismo, o hacerlo a través de los talleres que ofreceremos en diferentes instituciones educativas. Eso permitirá que muchos más árboles sean digitalizados y monitorizados.
+Dependiendo de la hora, el día, la estación del año a la que accedamos a sinfonía biótica, tendremos una experiencia diferente. Pero también, dependiendo de la sequía, de la salud del árbol que visitemos, recibiremos unas sensaciones u otras.
+Estos datos en tiempo real serán accesibles por más creadores a través de una API, lo que permitirá desarrollar utilizando estos datos, otras experiencias virtuales u otro tipo de piezas artísticas o científicas sobre esta información y estructura.
+El código de Sinfonía biótica, así como de la plataforma y base de datos que construyamos continuará siendo libre y de acceso abierto al público.
+
+
+
+Identificación e inclusión en la experiencia de seis árboles y dos hongos
+Se incorporarán a la experiencia seis árboles más, al menos tres de ellos, con recolección de datos en tiempo real.
+En cuánto a los hongos, identificaremos diferentes especies de hongos saprófitos (descomponedores de materia orgánica) y también micorrícicos (En simbiosis con árboles) presentes en parques y bosques en relación con los árboles ya identificados. Analizaremos sus particularidades y estudiaremos su integración en la sinfonía.
+
+Diseño de las piezas sonoras para los nuevos seres
+Las piezas sonoras de las escenas en tiempo real, serán creadas por tres artistas sonoros, para añadir una mayor riqueza sonora a la experiencia. La piezas sonoras de cada escena será creada por diferentes capas basadas en los datos reales en vivo, la atmósfera sonora será modificada por los sensores de humedad, temperatura y radiación solar, el entorno por los sensores de electroconductibilidad de la tierra y la cantidad de nutrientes disponibles, los instrumentos virtuales del árbol por sus impulsos eléctricos y el instrumento virtual de la persona jugadora, por sus movimientos y voz.
+
+Creación de los centinelas del bosque
+Son unos dispositivo sencillos, interactivos y artísticos que se conecta a un árbol específico del proyecto para, a través de luces tranquilas y agradables, muestran las señales vitales en tiempo real, traduciendo los impulsos eléctricos de la planta en experiencias sensoriales de luz o sonido. Este artefacto actúa como un vínculo emocional y contemplativo, invitando a las personas a conectarse con la naturaleza de manera profunda aun estando en sus casas.
+    • Monitorea y refleja la actividad bioeléctrica del árbol, simbolizando su "espíritu" y recordándonos que es un ser vivo con su propio ritmo.
+    • Árbol Totémico: Cada dispositivo se empareja con un árbol específico, convirtiéndolo en un símbolo personal para relajarse, enfocarse y conectar emocionalmente.
+    • Personalización Física: Diseños disponibles en una variedad de materiales y estéticas:
+Opciones en impresión 3D, corte láser, fieltro.
+Se usarán elementos orgánicos como corteza, ramas o hojas secas del propio árbol.
+    • DIY o Preensamblado: Disponible en kits para personas interesadas de la electrónica o completamente configurado para uso inmediato.
+    • Datos en Tiempo Real: Un código QR en la parte trasera del dispositivo permite acceder a información detallada y actualizada del árbol conectado, directamente desde cualquier smartphone.
+
+El centinela del bosque no solo es un objeto, sino una obra interactiva que fusiona tecnología, arte y sostenibilidad, permitiendo a los usuarios contribuir con la investigación y el proyecto.
+
+
+Con El Espíritu del Árbol, creamos un puente entre el mundo humano y el vegetal, invitando a nuevas formas de conexión y conciencia ecológica.
+
+Prototipado de prenda háptica biosensible
+Tiene como objetivo la creación de un prototipo funcional de prenda que permita recibir los impulsos eléctricos de las de la experiencia de realidad virtual en el cuerpo. De este modo la experiencia de realidad virtual se vuelve aun más emocionante y rompe las barreras de lo que hasta ahora conocemos como realidad virtual, añadiendo el tacto a los sentidos con los que la realidad virtual trabaja. 
+Este prototipo, de fácil uso y colocación, se utilizará en los eventos de diseminación (festivales, instalaciones, eventos de sensibilización, formaciones) y mejorará sustancialmente la experiencia del público con Sinfonía biótica.
+
+           Diseminación del proyecto
+Para aumentar el alcance y el impacto del proyecto, trabajaremos en las siguientes actividades:
+    • Plataforma de datos abiertos: Crearemos un catálogo detallado de los árboles involucrados en el proyecto, accesible en nuestra página web, mostrando datos, imágenes, datos en bruto de la digitalización de sus cuerpos físicos y fragmentos de los datos eléctricos recogidos. A través de una API, otros creadores podrán acceder a esta información para sus proyectos.
+
+Mockup de ejemplo: https://sinfoniabiotica.xyz/fresna-from-sancti-spiritus/
+    • Estudios de usabilidad: Realizaremos un estudio con 20 participantes (10 de ellos de zonas rurales) para analizar y mejorar la experiencia. Para este estudio contaremos con la experiencia del I’m_bodyLab. Con amplia experiencia dirigiendo estos estudios.
+https://imbodylab.com
+    • Eventos internacionales: Presentaremos el proyecto en al menos dos eventos internacionales relacionados con tecnología, arte y sostenibilidad.
+    • Instalaciones interactivas: Estamos en conversaciones con diferentes organismos en Suiza, Estados unidos, China, Colombia y España para la realización de instalaciones interactivas con plantas en espacios públicos utilizando la realidad virtual.
+    • Actividades educativas: Colaboraremos con instituciones educativas para organizar talleres y eventos formativos alrededor de Sinfonía biótica, estos eventos tendrán como objetivos la sensibilización sobre la importancia y complejidad de otros organismos no humanos, no animales y por otro lado enseñar a utilizar las tecnologías de monitorizar de plantas para añadirlas a Sinfonía biótica.
+    • Participación en concursos: Inscribiremos el proyecto en concursos nacionales e internacionales de experiencias virtuales para obtener visibilidad y financiamiento.
+
+
+
+           
+           Mejoras técnicas y evolución constante de la experiencia
+
+Gracias a las metodologías de desarrollo ágil de proyectos que usamos, somos capaces de integrar el feedback de los usuarios en ciclos de 28 días, siendo capaces de adaptarnos de una forma rápida y flexible a las necesidades y retos identificados por los usuarios.
+
+Entre las que ya tenemos identificadas del grupo de beta testers y primeros usuarios, destacan:
+
+    • Aumento de las posibilidades de interacción del jugador, diseñando nuevas mecánicas que permitan una mayor personalización y control de la experiencia por parte del usuario y la hagan más interesante.
+    • Mejorar la interacción por voz, incorporando análisis avanzados de voz para hacer más significativa y relevante la influencia de la voz del usuario en la pieza final.
+    • Posibilidad de influir en las nubes de puntos de los árboles. Las acciones del jugador modificarán las nubes de puntos de los árboles tanto visualmente como en la utilización de filtros y efectos en la parte sonora.
+    • Estabilidad de las visualizaciones: Optimizar el software para garantizar una experiencia más fluida y estable, mejorando la calidad gráfica y reduciendo errores.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3)  Previsiones de explotación: deberán contener información sobre el plan financiero y de negocio del proyecto, indicando los medios económicos, humanos y materiales con los que se desarrollará la actividad, así como los objetivos, la estrategia de difusión y distribución comercial y de comunicación, y la previsión de ingresos, gastos y ventas del proyecto a corto y largo plazo.
+
+       Medios Económicos:
+
+    • Ayudas públicas y privadas: Solicitud de subvenciones nacionales e internacionales en áreas de arte interactivo y sostenibilidad.
+Presentada una convocatoria a La fundación la Caixa el pasado noviembre, iniciados los diálogos con el Ayuntamiento de Sancti-Spíritus, la Fuente de San Esteban y Herguijuela de la Sierra.
+
+    • Inversores públicos y privados: Búsqueda de financiamiento de jardines botánicos, orquidarios, reservas y parques naturales ofreciéndoles la posibilidad de digitalizar algunos de sus ejemplares más relevantes dándoles visibilidad en la experiencia y en la base de datos.
+
+Durante este año hemos iniciado las conversaciones sobre la posible colaboración con el jardín botánico de Madrid, el orquidario de estepona y han mostrado su interés por hacer aportaciones al proyecto.
+
+    • Colaboraciones estratégicas: Establecer alianzas con organizaciones y marcas sostenibles, innovadoras y tecnológicas alineadas con el proyecto para cofinanciar eventos y dar a conocer el proyecto. Se buscará la participación de COTEC, La Pipa, Instituto Stoccos, La Tabakalera en Donosti, Medialab Matadero, Fundación Daniel y Nina Carasso y la Fundación Banco Santander.  
+
+       Medios Humanos:
+El núcleo de sinfonía biótica está formado por tres personas más además de Fernando Fernández,, que con esta ayuda crecería su implicación y participación con el proyecto. Éstas son:
+
+María Castro (b. 1998, Colombia) es una compositora, artista sonora y diseñadora de audio para videojuegos afincada en Madrid (España). Con formación en composición electroacústica y medios interactivos, explora en su trabajo la intersección entre ciencia, arte y tecnología. María ha contribuido a proyectos internacionales que abarcan videojuegos, experiencias VR/AR, instalaciones sonoras y festivales de artes electrónicas. Su práctica creativa fusiona el diseño sonoro, la programación de audio y la composición con un enfoque en la interactividad y el audio no lineal para crear experiencias inmersivas inspiradas en mujeres pioneras de la música electrónica. 
+
+Pedro Núñez Ribot, nacido en 1997, es un diseñador freelance de medios interactivos afincado en Madrid. Colabora como director técnico, artista visual y desarrollador interactivo para diferentes artistas conterpoarios como la Cie Gilles Jobin y el Instituto Stocos entre otros; allí aborda los retos de la tecnología en tiempo real en un espectáculo de danza. Como freelance también desarrolla sus propios proyectos como el lanzamiento de Kamu's Offering, mejor videojuego 3D en el Lima Web Fest Awards 2021 con más de 20.000 usuarios únicos, y la próxima experiencia interactiva MULTITOPIA, que se estrenará en 2025. 
+
+Joaquín Diaz Sotavento (Ciudad de México, 1982) Artista, ingeniero, performer e investigador, Doctor en Investigación en Humanidades, Artes y Educación por la UCLM (España). Su proyecto Interfaz Cíborg es un dispositivo interactivo que explora las relaciones entre arte, tecnología y cuerpo en la performance. Actualmente, es investigador en el i_mBODY Lab de la Universidad Carlos III de Madrid. Ha presentado su trabajo en espacios como Medialab Prado-Matadero, Teatros del Canal (Madrid), Tabakalera (Donostia), Link (Bolonia), Galerías Mira (Oporto) y Centro Multimedia (CDMX), colaborando además con artistas destacados de España y México en el desarrollo de tecnología para obras interactivas. 
+Además del núcleo de sinfonía biótica, para esta ocasión se contará con la contratación de especialistas puntuales para el desarrollo de algunas funcionalidades específicas, software, diseño gráfico, y análisis de datos ambientales para etapas críticas.
+También contaremos con colaboradores artísticos: Artistas y músicos sonoros involucrados para enriquecer las experiencias.
+
+       Medios Materiales:
+Gracias a la ayuda de 2024, disponemos de gran parte del equipamiento técnico que necesitamos para alcanzar los objetivos de este año (Equipo de digitalización visual, grabación acústica, herramientas de prototipado, headsets para desarrollo de la experiencia)
+
+Además, el equipo de colaboradores ponen a disposición del proyecto sus herramientas de trabajo y equipamiento profesional.
+
+Como medios materiales y de producción, gracias a la estrecha colaboración con ciertas instituciones y organizaciones, tenemos acceso a ciertos laboratorios de la Universidad Carlos III de Madrid, de Medialab Matadero y los Fablab del centro de emprendimiento Tormes+ del Ayuntamiento de Salamanca y MolinoLab.
+
+
+       
+Estrategia de Comunicación
+
+    • Medios de comunicación tradicionales: Gracias a la colaboración con MolinoLab, una serie de medios nacionales y locales (RTVE, El español, La Gaceta de Salamanca, SalamancaAlDía) se han hecho eco del proyecto y probablemente continúe siendo así en 2025. A mediados de diciembre se presentará oficialmente la versión beta de Sinfonía Biótica y se enviarán notas de prensa a la base de datos de medios con la que contamos.
+    • Redes Sociales y Página Web: Actualizaciones periódicas sobre avances del proyecto en la página web del proyecto https://sinfoniabiotica.xyz , de MolinoLab https://molinolab.org y en las redes sociales de MolinoLab, con más de dos mil seguidores activos.
+    • Eventos Internacionales: Hemos comenzado a enviar dosieres para la participación de sinfonía biótica en ferias de arte y tecnología, festivales de música, eventos sobre videojuegos, realidad virtual. Ars Electronica, Games for Change, InteractivasFest, Rototom, Iboga festival, Festival de músicas do mundo en Sines, Womad son algunos de los eventos identificados.
+    • Colaboraciones Educativas: Talleres y seminarios con universidades (Universidad Carlos III de Madrid y la Universidad de Salamanca) así como centros de investigación.
+A través de la colaboración del ayuntamiento de Sancti-Spíritus y la fuente de San esteban, podremos organizar actividades con los centros educativos de ambos pueblos.
+
+       Estrategia de Comercialización
+
+Por un lado, el objetivo es consolidar "Sinfonía Biótica" como una experiencia pionera en la intersección del arte, la tecnología y la ecología, atrayendo tanto a públicos especializados como a audiencias generales interesadas en innovación y sostenibilidad.
+Por otro, generar ingresos sostenibles a través de productos, experiencias y colaboraciones.
+Como tercer objetivo, ampliar el alcance del proyecto, creando una comunidad global que participe activamente en el crecimiento del proyecto y lo haga suyo.
+El 50% de los beneficios de este proyecto están destinados a la plantación, cuidado y mantenimiento del bosque de MolinoLab que recupera un antiguo terreno degradado por las prácticas ganadera y agrícolas.
+
+
+           
+           Canales de Comercialización
+Experiencia Virtual (Digital/VR)
+    • Venta directa de acceso a la experiencia interactiva a través de plataformas digitales como Itch.io, SteamVR, y Meta Quest Store.
+
+Venta de dispositivos (Centinela y biodata)
+    • Venta directa: Disponible a través de una tienda en línea en la página web sinfonía biótica y Etsy.
+    • Modelo de kits DIY: Para el público maker, con materiales e instrucciones detalladas, fomentando una relación personalizada con el proyecto.
+
+Colaboraciones Artísticas y Científicas
+    • Digitalización de árboles e inclusión en la experiencia: para jardines botánicos
+    • Instalaciones interactivas: Desarrollo de obras únicas basadas en datos de plantas y árboles específicos para artistas o instituciones.
+
+Actividades Educativas y Talleres
+    • Talleres presenciales y en línea sobre el proyecto, los biodata, bioarte, tecnología interactiva y conciencia ambiental, dirigidos a centros educativos, empresas y organizaciones.
+
+    • Asesoramiento personalizado en el desarrollo de proyectos de arte, naturaleza y tecnología
+    • Charlas y presentaciones sobre la experiencia
+
+
+
+Previsión de Ingresos y Ventas
+Para el desarrollo de la segunda fase del proyecto, contamos con:
+
+Ingresos esperados para el desarrollo de esta fase del proyecto:
+        ? Patrocinios y subvenciones: 24.700 €.
+        ? Fondos propios: 6.700 € 
+
+Gastos previstos del desarrollo:
+        ? Desarrollo técnico y artístico: 15.800 €
+        ? Equipamiento y materiales: 2.980 €
+        ? Producción de dispositivos: 5,600 €.
+        ? Actividades de diseminación: 4800 €.
+        ? Comunicación: 2.220 € 
+
+           Retorno de inversión
+Las estimaciones para el retorno de inversión a corto y largo plazo son las siguientes:
+Retorno de inversión a corto plazo (2025)
+        ? Venta de experiencias: 500 €.
+        ? Eventos formativos y sensibilizaciones: 5,000€
+        ? Venta de dispositivos: 3000 €
+        ? Instalaciones artísticas interactivas: 6,000 €.
+
+Retorno de inversión a largo plazo (2026 – 2030)
+        ? Venta de experiencias: 2000 €.
+        ? Eventos formativos y sensibilizaciones: 20,000€
+        ? Venta de dispositivos: 6000 €
+        ? Instalaciones artísticas interactivas: 40,000 €.
+
+
+
+               Proyección de Impacto
+"Sinfonía Biótica" buscar ser un referente en la fusión de arte, tecnología y ecología, con aplicaciones prácticas en:
+    • Conciencia ambiental: Inspirar a las personas a reconectar con la naturaleza de una manera única y profunda.
+
+    • Educación: Integrar herramientas innovadoras en programas educativos que promuevan el aprendizaje interactivo.
+
+    • Cultura y arte: Impulsar nuevas narrativas creativas que exploren la coexistencia entre humanos y el entorno natural.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
