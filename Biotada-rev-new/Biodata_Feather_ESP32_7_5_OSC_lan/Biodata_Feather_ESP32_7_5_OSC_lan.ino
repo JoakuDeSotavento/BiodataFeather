@@ -130,7 +130,6 @@ unsigned long blinkTime = 0;
 Adafruit_USBD_MIDI usb_midi;
 MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, usbMIDI);
 
-
 //Bluetooth Configuration
 #include <BLEDevice.h>
 #include <BLEUtils.h>

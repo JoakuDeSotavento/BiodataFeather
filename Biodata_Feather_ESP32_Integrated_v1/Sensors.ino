@@ -52,19 +52,37 @@ void read_sensors() {
   delay(100);
   bme.update();
   
-  temperature = bme.readTemperature();
+  temperature = bme.readTemperature() / 100.0;  // Dividir por 100
   pressure = bme.readPressure();
-  humidity = bme.readHumidity();
+  humidity = bme.readHumidity() / 1000.0;       // Dividir por 1000
   gas = bme.readGasResistance();
-  altitude = bme.readAltitude(); // Sin parámetros
-  altitudeCal = altitude; // Usar el mismo valor por ahora
+  altitude = bme.readAltitude();
+  altitudeCal = bme.readCalibratedAltitude(seaLevel);
+  
+  // Proteger contra NaN o inf en altitud calibrada
+  if (isnan(altitudeCal) || isinf(altitudeCal)) {
+    altitudeCal = altitude; // fallback
+    if(debugSerial) Serial.println("Altitud calibrada inválida, usando altitud normal");
+  }
+  
+  if(debugSerial) {
+    Serial.println("=== Valores Raw BME688 ===");
+    Serial.printf("Temp Raw: %.2f°C\n", temperature);
+    Serial.printf("Humedad Raw: %.2f%%\n", humidity);
+    Serial.printf("Presión Raw: %.0f Pa\n", pressure);
+    Serial.printf("Gas Raw: %.0f Ohm\n", gas);
+    Serial.printf("Altitud Raw: %.2f m\n", altitude);
+    Serial.println("==========================");
+  }
   
   // Verificar que los valores sean razonables
-  if (isnan(temperature) || temperature < -50 || temperature > 100) {
-    temperature = 0.0;
+  if (isnan(temperature) || temperature < -100 || temperature > 200) {
+    if(debugSerial) Serial.println("Temperatura inválida, usando valor por defecto");
+    temperature = 25.0; // Valor por defecto razonable
   }
-  if (isnan(humidity) || humidity < 0 || humidity > 100) {
-    humidity = 0.0;
+  if (isnan(humidity) || humidity < -10 || humidity > 110) {
+    if(debugSerial) Serial.println("Humedad inválida, usando valor por defecto");
+    humidity = 50.0; // Valor por defecto razonable
   }
   if (isnan(pressure) || pressure < 80000 || pressure > 120000) {
     pressure = 101325.0;
@@ -74,13 +92,24 @@ void read_sensors() {
   }
   
   // Leer sensor de luz LTR329
-  uint16_t visible_ir, infrared_ir;
+  uint16_t visible_plus_ir = 0;
+  uint16_t infrared_ir = 0;
+  bool valid = false;
+
   if (ltr.newDataAvailable()) {
-    bool valid = ltr.readBothChannels(visible_ir, infrared_ir);
-    if (valid) {
-      visible = visible_ir;
-      infrared = infrared_ir;
+    valid = ltr.readBothChannels(visible_plus_ir, infrared_ir);
+  }
+
+  if (valid) {
+    visible = visible_plus_ir;
+    infrared = infrared_ir;
+    if(debugSerial) {
+      Serial.printf("LTR329 - Visible+IR: %u, IR: %u\n", visible_plus_ir, infrared_ir);
     }
+  } else {
+    if(debugSerial) Serial.println("LTR329 - Error leyendo datos");
+    visible = 0;
+    infrared = 0;
   }
   
   if(debugSerial) {
@@ -107,15 +136,15 @@ void send_mqtt_data() {
   // Crear JSON con datos de sensores
   StaticJsonDocument<512> doc;
   
-  doc["temperatura"] = round(temperature * 100) / 100.0;
-  doc["presion"] = (int)pressure;
-  doc["humedad"] = round(humidity * 100) / 100.0;
-  doc["gas"] = (int)gas;
-  doc["altitud"] = round(altitude * 100) / 100.0;
-  doc["altitudCalibrada"] = round(altitudeCal * 100) / 100.0;
+  doc["temperatura"] = temperature;
+  doc["presion"] = pressure;
+  doc["humedad"] = humidity;
+  doc["gas"] = gas;
+  doc["altitud"] = altitude;
+  doc["altitudCalibrada"] = altitudeCal;
   doc["visible_ir"] = visible;
   doc["infrarrojo"] = infrared;
-  doc["sensor"] = "biodata_feather";
+  doc["sensor"] = SENSOR_ID;
   doc["timestamp"] = millis();
   
   // Serializar JSON
@@ -123,7 +152,10 @@ void send_mqtt_data() {
   serializeJson(doc, payload);
   
   // Publicar en MQTT
-  String topic = String(MQTT_BASE_TOPIC) + "/sensors/" + String(SENSOR_ID);
+  String topic = String(MQTT_BASE_TOPIC) + "/" + String(SENSOR_ID);
+  if(debugSerial) {
+    Serial.printf("Publicando en tópico: %s\n", topic.c_str());
+  }
   bool published = mqtt.publish(topic.c_str(), payload.c_str());
   
   if(debugSerial) {

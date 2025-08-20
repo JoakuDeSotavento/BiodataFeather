@@ -31,6 +31,10 @@
 // ---------- Configuración del sistema ----------
 #define MQTT_BASE_TOPIC "biodata"
 #define SENSOR_ID "biodata1" // Cambia esto por cada nodo
+
+// ---------- InfluxDB (opcional, para envío directo) ----------
+const char* influxURL = "https://db.sinfoniabiotica.xyz:443/api/v2/write?org=MolinoLab&bucket=biodata&precision=s";
+const char* influxToken = "0b2BkqoPhbVEg3yXNhYC09odJmLvSK8RlrjGndZiAS5wEeKqqNiG7ZVeP6U2MoRg86UsFgHTwBpq1_Ls4TsB9A==";
 #define SENSOR_READ_INTERVAL 5000    // 5 segundos
 #define MQTT_SEND_INTERVAL 10000     // 10 segundos
 
