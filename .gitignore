@@ -1,0 +1,228 @@
+# BiodataFeather - Git Ignore
+# Protección de datos sensibles y archivos innecesarios
+
+# ========================================
+# DATOS SENSIBLES - CREDENCIALES
+# ========================================
+
+# Archivos de configuración con credenciales
+**/secrets.h
+**/secrets_integrated.h
+**/secrets_*.h
+**/config.h
+**/credentials.h
+**/wifi_config.h
+**/mqtt_config.h
+
+# Archivos de configuración con tokens/keys
+**/*.env
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development
+
+# Archivos de configuración de servicios
+**/firebase_config.json
+**/influxdb_config.json
+**/mqtt_config.json
+**/api_keys.json
+
+# ========================================
+# ARCHIVOS DE ARDUINO
+# ========================================
+
+# Archivos compilados de Arduino
+**/*.hex
+**/*.bin
+**/*.elf
+**/*.map
+**/*.eep
+**/*.lss
+**/*.sym
+**/*.a
+
+# Archivos temporales de Arduino IDE
+**/build/
+**/Debug/
+**/Release/
+**/.pio/
+**/.vscode/
+**/.arduino15/
+
+# Archivos de configuración de Arduino
+**/platformio.ini
+**/arduino_ide_config.txt
+
+# ========================================
+# ARCHIVOS DE SISTEMA
+# ========================================
+
+# Archivos del sistema operativo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ========================================
+# ARCHIVOS DE DESARROLLO
+# ========================================
+
+# Logs y archivos de debug
+**/*.log
+**/logs/
+**/debug/
+**/error_log.txt
+**/debug_output.txt
+
+# Archivos de backup
+**/*.bak
+**/*.backup
+**/*.old
+**/*.orig
+
+# Archivos de IDE
+**/.vscode/
+**/.idea/
+**/*.sublime-project
+**/*.sublime-workspace
+
+# ========================================
+# ARCHIVOS DE DATOS
+# ========================================
+
+# Bases de datos locales
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+
+# Archivos de datos de sensores
+**/sensor_data/
+**/data_logs/
+**/measurements/
+**/*_data.csv
+**/*_data.json
+**/*_data.txt
+
+# Archivos de configuración de Node-RED con credenciales
+**/node-red-config.json
+**/flows.json
+**/settings.js
+**/credentials.json
+
+# ========================================
+# ARCHIVOS DE DOCUMENTACIÓN SENSIBLE
+# ========================================
+
+# Documentos con información sensible
+**/passwords.txt
+**/credentials.txt
+**/api_keys.txt
+**/tokens.txt
+**/private_notes.txt
+
+# Archivos de configuración de servicios
+**/docker-compose.yml
+**/docker-compose.override.yml
+**/docker-compose.prod.yml
+
+# ========================================
+# ARCHIVOS DE BACKUP Y VERSIONES
+# ========================================
+
+# Archivos de backup automáticos
+**/*.backup
+**/*.bak
+**/*.old
+**/*.orig
+**/*.rej
+
+# Archivos de versiones anteriores
+**/old/
+**/backup/
+**/archive/
+**/versions/
+
+# ========================================
+# ARCHIVOS ESPECÍFICOS DEL PROYECTO
+# ========================================
+
+# Archivos de configuración específicos
+**/mqtt_broker_config.h
+**/wifi_credentials.h
+**/influxdb_config.h
+**/firebase_config.h
+
+# Archivos de datos de sensores
+**/sensor_readings/
+**/environmental_data/
+**/biodata_logs/
+
+# Archivos de configuración de servicios web
+**/web_config/
+**/api_config/
+**/server_config/
+
+# ========================================
+# ARCHIVOS DE TESTING Y DESARROLLO
+# ========================================
+
+# Archivos de testing con datos reales
+**/test_data/
+**/sample_data/
+**/mock_data/
+
+# Archivos de desarrollo temporal
+**/dev/
+**/temp/
+**/tmp/
+
+# ========================================
+# ARCHIVOS DE DEPLOYMENT
+# ========================================
+
+# Archivos de configuración de producción
+**/prod_config/
+**/production/
+**/deploy/
+
+# Archivos de configuración de servidores
+**/server/
+**/hosting/
+**/deployment/
+
+# ========================================
+# EXCEPCIONES - ARCHIVOS QUE SÍ INCLUIR
+# ========================================
+
+# Incluir archivos de ejemplo (sin credenciales reales)
+!**/secrets_example.h
+!**/config_example.h
+!**/credentials_example.h
+
+# Incluir archivos de configuración de ejemplo
+!**/node-red-flow-example.json
+!**/mqtt-config-example.json
+
+# ========================================
+# NOTAS IMPORTANTES
+# ========================================
+
+# IMPORTANTE: 
+# - Nunca subir archivos con credenciales reales
+# - Usar archivos de ejemplo con valores ficticios
+# - Verificar que no haya credenciales en el historial de git
+# - Usar variables de entorno cuando sea posible
+
+# Para limpiar credenciales del historial de git:
+# git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch **/secrets.h' --prune-empty --tag-name-filter cat -- --all
