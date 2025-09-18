@@ -32,13 +32,13 @@
 ***/
 // Wifi Credentials ~~~~~~~~~~~!!!!
 
-char ssid[] = "OxfordEast";  //  your network SSID (name)
-char pass[] = "oxfordeast";  // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "MolinoLab";  //  your network SSID (name)
+char pass[] = "hacktheworld";  // your network password (use for WPA, or use as key for WEP)
 
 // ~~~~~~~~~~~~~!!!!
 //  Set the MIDI Channel of this node
 byte channel = 1;                       //
-IPAddress local_IP(192, 168, 68, 207);  //use this IP
+IPAddress local_IP(192, 168, 1, 207);  //use this IP
 bool staticIP = false;                  // true;  //toggle for dynamic IP
 //static IP
 
