@@ -86,17 +86,17 @@ void setup() {
   tlsClient.setInsecure(); // Solo para pruebas
 
   // MQTT
-  mqtt.setServer(MQTT_BROKER, MQTT_PORT);
-  mqtt.setKeepAlive(15); // Mantener vivo
+  /*mqtt.setServer(MQTT_BROKER, MQTT_PORT);
+  mqtt.setKeepAlive(15); // Mantener vivo*/
 }
 
 // ---------- Loop ----------
 void loop() {
-  if (!mqtt.connected()) {
+  /*if (!mqtt.connected()) {
     reconnect_mqtt();
   }
   mqtt.loop(); // Mantiene vivo el cliente MQTT
-
+*/
   if (millis() - lastRead >= READ_INTERVAL) {
     lastRead = millis();
     read_sensors();
@@ -153,7 +153,7 @@ void read_sensors() {
   send_influx(influxLine);
 
   // MQTT JSON
-  StaticJsonDocument<256> doc;
+  /*StaticJsonDocument<256> doc;
   doc["temperatura"] = temperatura;
   doc["presion"] = presion;
   doc["humedad"] = humedad;
@@ -167,7 +167,7 @@ void read_sensors() {
   char mqttPayload[256];
   serializeJson(doc, mqttPayload);
 
-  send_mqtt(mqttTopic, mqttPayload);
+  send_mqtt(mqttTopic, mqttPayload);*/
 }
 
 // ---------- Envío a InfluxDB ----------
@@ -192,7 +192,7 @@ void send_influx(const String& line) {
 
 // ---------- Envío a MQTT ----------
 void send_mqtt(const String& topic, const String& payload) {
-  mqtt.publish(topic.c_str(), payload.c_str(), false); // QoS 0
+  //mqtt.publish(topic.c_str(), payload.c_str(), false); // QoS 0
 }
 
 // ---------- WiFi ----------
@@ -210,7 +210,7 @@ void setup_wifi() {
 
 // ---------- Reconexión MQTT ----------
 void reconnect_mqtt() {
-  while (!mqtt.connected()) {
+  /*while (!mqtt.connected()) {
     Serial.print("Conectando MQTT...");
     if (mqtt.connect(SENSOR_ID, MQTT_USER, MQTT_PASSWORD)) {
       Serial.println("OK");
@@ -219,5 +219,5 @@ void reconnect_mqtt() {
       Serial.println(" reintentando en 5s");
       delay(5000);
     }
-  }
+  }*/
 }

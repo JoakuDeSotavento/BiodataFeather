@@ -35,8 +35,8 @@
 
 // Wifi Credentials ~~~~~~~~~~~!!!!
 
-char ssid[] = "lattice";              //  your network SSID (name)
-char pass[] = "joakinator16180";      // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "MolinoLab";              //  your network SSID (name)
+char pass[] = "hacktheworld";      // your network password (use for WPA, or use as key for WEP)
                                       // ~~~~~~~~~~~~~!!!!
                                       //  Set the MIDI Channel of this node
 byte channel = 1;                     //
@@ -48,7 +48,7 @@ bool staticIP = false;                // true;  //toggle for dynamic IP
 
 #include <OSCMessage.h>
 
-const char *oscIP = "192.168.1.35";  // Dirección IP de destino
+const char *oscIP = "192.168.1.170";  // Dirección IP de destino
 const int oscPort = 8000;            // Puerto de destino
 
 WiFiUDP Udp;

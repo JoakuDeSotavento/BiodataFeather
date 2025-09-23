@@ -226,3 +226,5 @@ desktop.ini
 
 # Para limpiar credenciales del historial de git:
 # git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch **/secrets.h' --prune-empty --tag-name-filter cat -- --all
+*.h
+00_Biotada_MolinoLab_versions/PublishInfluxDB/secrets.h
