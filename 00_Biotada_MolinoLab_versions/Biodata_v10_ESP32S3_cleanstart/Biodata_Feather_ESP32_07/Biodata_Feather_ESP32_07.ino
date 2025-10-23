@@ -28,10 +28,32 @@
 7. press button, display status LED and usb serial information print
 
 ***/
-// Wifi Credentials ~~~~~~~~~~~!!!!
 
-char ssid[] = "MolinoLab";             //  your network SSID (name)
-char pass[] = "hacktheworld";          // your network password (use for WPA, or use as key for WEP)
+// ============================================================================
+// MQTT/InfluxDB Buffer - Includes y configuración
+// ============================================================================
+#include <WiFiClient.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+#include "secrets.h"  // Credenciales WiFi, MQTT e InfluxDB
+
+// Referencias a WiFi desde secrets.h para compatibilidad con código existente
+char ssid[] = WIFI_SSID;
+char pass[] = WIFI_PASSWORD;
+
+// Variables externas del buffer MQTT (definidas en MQTTInflux.ino)
+extern bool bufferEnabled;
+extern PubSubClient mqtt;
+
+// Declaraciones de funciones del buffer MQTT (implementadas en MQTTInflux.ino)
+void setupMQTT();
+void reconnectMQTT();
+void addNoteToBuffer(byte note, byte velocity, int duration, byte channel);
+void sendBufferToInflux();
+void checkBufferTimer();
+// ============================================================================
+
+// Wifi Credentials ahora están en secrets.h
                                        // ~~~~~~~~~~~~~!!!!
                                        //  Set the MIDI Channel of this node
 byte channel = 1;                      //
