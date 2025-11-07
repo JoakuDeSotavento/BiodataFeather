@@ -47,12 +47,12 @@ void setupMQTT() {
   #ifdef SENSOR_ID_MANUAL
     sensorID = SENSOR_ID_MANUAL;
   #else
-    // Formato: biodata_AABBCC (últimos 3 bytes del MAC en hex)
-    sensorID = "biodata_";
-    for (int i = 3; i < 6; i++) {
-      if (mac[i] < 16) sensorID += "0";
-      sensorID += String(mac[i], HEX);
+    int uniq = 0;
+    for (int i = 0; i < 6; i++) {
+      uniq += mac[i];
     }
+    sensorID = "biodata_";
+    sensorID += String(uniq);
   #endif
   
   if (debugSerial) {

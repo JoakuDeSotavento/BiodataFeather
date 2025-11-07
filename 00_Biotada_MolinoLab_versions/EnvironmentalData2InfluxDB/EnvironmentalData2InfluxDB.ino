@@ -22,6 +22,7 @@ DFRobot_BME68x_I2C bme(0x77); // I2C address
 WiFiClientSecure tlsClient;
 WiFiClient mqttClient;
 PubSubClient mqtt(mqttClient);
+String sensorId;
 
 // ---------- Timing ----------
 unsigned long lastRead = 0;
@@ -81,6 +82,21 @@ void setup() {
 
   // WiFi
   setup_wifi();
+
+  sensorId = "";
+#ifdef SENSOR_ID
+  sensorId = SENSOR_ID;
+#endif
+  if (sensorId.length() == 0) {
+    byte mac[6];
+    WiFi.macAddress(mac);
+    int uniq = 0;
+    for (int i = 0; i < 6; i++) {
+      uniq += mac[i];
+    }
+    sensorId = "env_";
+    sensorId += String(uniq);
+  }
 
   // TLS
   tlsClient.setInsecure(); // Solo para pruebas
@@ -146,7 +162,7 @@ void read_sensors() {
   doc["visible_ir"] = visible_plus_ir;
   doc["infrarrojo"] = infrared;
 
-  String mqttTopic = String(MQTT_BASE_TOPIC) + "/" + SENSOR_ID;
+  String mqttTopic = String(MQTT_BASE_TOPIC) + "/" + sensorId;
   char mqttPayload[256];
   serializeJson(doc, mqttPayload);
 
@@ -174,7 +190,7 @@ void setup_wifi() {
 void reconnect_mqtt() {
   while (!mqtt.connected()) {
     Serial.print("Conectando MQTT...");
-    if (mqtt.connect(SENSOR_ID, MQTT_USER, MQTT_PASSWORD)) {
+    if (mqtt.connect(sensorId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
       Serial.println("OK");
     } else {
       Serial.print("Falló, rc="); Serial.print(mqtt.state());
