@@ -10,10 +10,9 @@ void setup() {
 
     
 
-  if(usbmidi) { //could get hung here if no USB? !!
-    usbMIDI.begin(); //turn on USB-MIDI
-    // Wait until device is enumerated properly before sending MIDI message
-   // while( !TinyUSBDevice.mounted() ) delay(1);
+  if(usbmidi) { 
+    USB.begin(); // Inicializar USB (ESP32 v3.3.2)
+    usbMIDI.begin(); // Inicializar USB-MIDI nativo
   }
   
   //pinMode(buttonPin, INPUT_PULLUP); //button managed by PinButton

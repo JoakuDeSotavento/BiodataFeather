@@ -86,7 +86,7 @@ byte rawSerial = 0;          // raw biodata stream via serial data
 byte serialMIDI = 1;         //write serial data to MIDI hardware output
 byte wifiMIDI = 0;           //do all the fancy wifi stuff and RTP MIDI over AppleMIDI
 byte bleMIDI = 0;            //bluetooth midi
-byte usbmidi = 1;            //usb MIDI connection <Adafruit_TinyUSB.h> for ESP32S3
+byte usbmidi = 1;            //usb MIDI connection - ESP32 v3.3.2 native TinyUSB
 byte midiMode = 1;           //change mode for serial, ble, wifi, usb
 byte wifiActive = 0;         //turn the wifi on and off, needed for wifiMIDI apparently
 byte bleActive = 0;          //toggle for connected disconnected?  prob not needed, use library
@@ -115,11 +115,10 @@ byte maxBrightness = 60;
 bool blinkToggle = 0;
 unsigned long blinkTime = 0;
 
-//USB MIDI
-#include <Adafruit_TinyUSB.h>
-#include <MIDI.h>
-Adafruit_USBD_MIDI usb_midi;
-MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, usbMIDI);
+//USB MIDI - ESP32 v3.3.2 Native Implementation
+#include "USB.h"
+#include "USBMIDI.h"
+USBMIDI usbMIDI;
 
 
 //Bluetooth Configuration

@@ -14,7 +14,7 @@ void setNote(int value, int velocity, long duration, int notechannel)
       
 //*************
       if(serialMIDI) midiSerial(144, channel, value, velocity); //play note
-      if(usbmidi) usbMIDI.sendNoteOn(value,velocity,channel);
+      if(usbmidi) usbMIDI.noteOn(value,velocity,channel); // API nativa ESP32 v3.3.2
       if(wifiMIDI&&isConnected) MIDI.sendNoteOn(value,velocity,channel);
       if (bleMIDI) {
               if (deviceConnected) {
@@ -78,7 +78,7 @@ void checkControl()
 //*************
       //determine serial, wifi, or ble
        if(serialMIDI) midiSerial(176, channel, controlMessage.type, controlMessage.value); 
-       if(usbmidi) usbMIDI.sendControlChange(controlNumber,controlMessage.value,channel);
+       if(usbmidi) usbMIDI.controlChange(controlNumber,controlMessage.value,channel); // API nativa ESP32 v3.3.2
        if(wifiMIDI&&isConnected) { MIDI.sendControlChange(controlNumber,controlMessage.value,channel); } //AppleMIDI.sendControlChange?
        if(deviceConnected) {   //bluetooth CC
                 // note On
@@ -100,7 +100,7 @@ void checkNote()
       if (noteArray[i].duration <= currentMillis) {
         //send noteOff for all notes with expired duration    
         if(serialMIDI) midiSerial(144, channel, noteArray[i].value, 0); 
-        if(usbmidi) usbMIDI.sendNoteOn(noteArray[i].value, 0, channel);
+        if(usbmidi) usbMIDI.noteOff(noteArray[i].value, 0, channel); // API nativa ESP32 v3.3.2
         if(wifiMIDI && isConnected) MIDI.sendNoteOff(noteArray[i].value, 0, channel);
         noteArray[i].velocity = 0;
         ledFaders[i].Set(0,800);//turn off leds fade out
