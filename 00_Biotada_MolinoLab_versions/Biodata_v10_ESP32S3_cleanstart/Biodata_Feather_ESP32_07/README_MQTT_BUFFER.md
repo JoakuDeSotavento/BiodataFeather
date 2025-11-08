@@ -68,7 +68,10 @@ En `MQTTInflux.ino`:
 
 ```cpp
 #define BUFFER_SEND_INTERVAL 10000  // 10 segundos (ajustable)
-#define MIDI_BUFFER_SIZE 100        // Max 100 notas en buffer
+#define MIDI_BUFFER_SIZE 100        // Máx. 100 notas en buffer
+#define ENABLE_RAW_LOGGING 1        // 0 para desactivar el registro crudo
+#define RAW_BLOCK_QUEUE_SIZE 6      // Máx. 6 bloques crudos pendientes
+#define MAX_CONSECUTIVE_SEND_FAILURES 3 // Descartar buffers tras 3 intentos fallidos
 ```
 
 ---
@@ -85,21 +88,42 @@ biodata/{SENSOR_ID}/midi
 {
   "sensor_id": "biodata_a1b2c3",
   "timestamp": 1234567890,
-  "count": 5,
+  "count": 3,
+  "raw_count": 1,
   "notes": [
     {"t": 1001, "n": 60, "v": 90, "d": 500, "c": 1},
     {"t": 1150, "n": 62, "v": 85, "d": 450, "c": 1},
     {"t": 1300, "n": 64, "v": 95, "d": 600, "c": 1}
+  ],
+  "raw_blocks": [
+    {
+      "t": 1234500,
+      "samples": [842, 856, 861, 870, 882, 893, 899, 905, 914],
+      "stats": {
+        "max": 914,
+        "min": 842,
+        "avg": 873,
+        "std": 23.4,
+        "delta": 72
+      },
+      "threshold": 1.92
+    }
   ]
 }
 ```
 
-**Campos:**
-- `t` - timestamp relativo (millis)
-- `n` - nota MIDI (0-127)
-- `v` - velocity (0-127)
-- `d` - duration (ms)
-- `c` - canal MIDI (1-16)
+**Campos de notas:**
+- `t` — timestamp relativo (`millis()`) cuando se capturó la nota
+- `n` — nota MIDI (0-127)
+- `v` — velocity (0-127)
+- `d` — duración (ms)
+- `c` — canal MIDI (1-16)
+
+**Campos de bloques crudos (`raw_blocks`):**
+- `t` — timestamp relativo (`millis()`) cuando se finalizó el bloque
+- `samples` — arreglo de 9 mediciones consecutivas (sin procesar)
+- `stats` — objeto con métricas del bloque (`max`, `min`, `avg`, `std`, `delta`)
+- `threshold` — valor de `threshold` vigente al calcular el bloque
 
 ---
 
@@ -125,7 +149,7 @@ Conectando MQTT... intento 1
 
 ### El buffer no envía nada
 
-✅ **Normal**: Si no se generan notas, no se envía nada (comportamiento esperado)
+✅ **Normal**: Si no se generan notas **ni** bloques crudos, no se publica nada (comportamiento esperado)
 
 ### MQTT no conecta
 

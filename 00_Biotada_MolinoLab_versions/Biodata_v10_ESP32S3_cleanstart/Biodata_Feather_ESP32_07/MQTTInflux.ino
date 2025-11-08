@@ -6,10 +6,37 @@
 // No modifica ninguna funcionalidad MIDI existente.
 // ============================================================================
 // Nota: Los includes y secrets.h están en el archivo principal
+#include <cstring>
 
 // Configuración del buffer
+#ifndef ENABLE_RAW_LOGGING
+#define ENABLE_RAW_LOGGING 1
+#endif
+
 #define MIDI_BUFFER_SIZE 100              // Tamaño máximo del buffer
 #define BUFFER_SEND_INTERVAL 10000        // 10 segundos entre envíos
+#define MAX_CONSECUTIVE_SEND_FAILURES 3   // Reintentos antes de descartar buffers
+
+#if ENABLE_RAW_LOGGING
+#define RAW_BLOCK_QUEUE_SIZE 6
+#define RAW_BLOCK_SAMPLE_COUNT 9
+
+struct RawSampleBlock {
+  unsigned long timestamp;
+  unsigned long samples[RAW_BLOCK_SAMPLE_COUNT];
+  unsigned long maximum;
+  unsigned long minimum;
+  unsigned long average;
+  float stddev;
+  unsigned long delta;
+  float threshold;
+};
+
+static RawSampleBlock rawBlockQueue[RAW_BLOCK_QUEUE_SIZE];
+static size_t rawBlockWriteIndex = 0;
+static size_t rawBlockReadIndex = 0;
+static size_t rawBlockCount = 0;
+#endif
 
 // Estructura para almacenar notas MIDI en el buffer
 struct MIDIBufferEntry {
@@ -25,6 +52,8 @@ MIDIBufferEntry midiBuffer[MIDI_BUFFER_SIZE];
 int bufferIndex = 0;
 unsigned long lastBufferSend = 0;
 bool bufferEnabled = false;
+bool forceSendPending = false;
+static uint8_t consecutiveSendFailures = 0;
 
 // Cliente MQTT
 WiFiClient mqttWifiClient;
@@ -35,6 +64,8 @@ PubSubClient mqtt(mqttWifiClient);
 
 // Sensor ID (generado desde MAC)
 String sensorID = "";
+
+void flushMQTTPayload();
 
 // ============================================================================
 // SETUP MQTT - Inicialización del cliente MQTT
@@ -134,7 +165,8 @@ void addNoteToBuffer(byte note, byte velocity, int duration, byte channel) {
     if (debugSerial) {
       Serial.println("⚠ Buffer lleno - Forzando envío inmediato");
     }
-    sendBufferToInflux();
+    forceSendPending = true;
+    flushMQTTPayload();
   }
   
   // Agregar nota al buffer
@@ -148,12 +180,17 @@ void addNoteToBuffer(byte note, byte velocity, int duration, byte channel) {
 }
 
 // ============================================================================
-// SEND BUFFER TO INFLUX - Enviar buffer de notas vía MQTT
+// SEND BUFFER TO INFLUX - Enviar buffer de notas y bloques crudos vía MQTT
 // ============================================================================
-void sendBufferToInflux() {
-  // Si buffer vacío, no enviar nada (OPCIÓN A)
-  if (bufferIndex == 0) {
-    return;
+bool sendBufferToInflux() {
+#if ENABLE_RAW_LOGGING
+  const size_t rawCount = rawBlockCount;
+#else
+  const size_t rawCount = 0;
+#endif
+
+  if (bufferIndex == 0 && rawCount == 0) {
+    return false;
   }
   
   // Verificar conexión MQTT y reconectar si es necesario
@@ -170,19 +207,30 @@ void sendBufferToInflux() {
       if (debugSerial) {
         Serial.println("✗ No se pudo reconectar - Buffer retenido");
       }
-      return;
+      return false;
     }
   }
   
   // Construir payload JSON
-  // Calcular capacidad necesaria: base (100) + 80 bytes por nota
-  const size_t capacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(bufferIndex) + bufferIndex * JSON_OBJECT_SIZE(5) + 200;
+  const size_t baseSize = JSON_OBJECT_SIZE(6); // sensor_id, timestamp, count, raw_count, notes, raw_blocks
+  const size_t notesArraySize = JSON_ARRAY_SIZE(bufferIndex);
+  const size_t notesObjectsSize = bufferIndex * JSON_OBJECT_SIZE(5); // t,n,v,d,c
+#if ENABLE_RAW_LOGGING
+  const size_t rawArraySize = JSON_ARRAY_SIZE(rawCount);
+  const size_t rawStatsSize = JSON_OBJECT_SIZE(5); // max,min,avg,std,delta
+  const size_t rawBlockEntrySize = JSON_OBJECT_SIZE(4) + rawStatsSize + JSON_ARRAY_SIZE(RAW_BLOCK_SAMPLE_COUNT);
+  const size_t rawBlocksSize = rawCount * rawBlockEntrySize + rawArraySize;
+#else
+  const size_t rawBlocksSize = 0;
+#endif
+  const size_t capacity = baseSize + notesArraySize + notesObjectsSize + rawBlocksSize + 300;
   DynamicJsonDocument doc(capacity);
   
   // Metadata
   doc["sensor_id"] = sensorID;
   doc["timestamp"] = millis();
   doc["count"] = bufferIndex;
+  doc["raw_count"] = rawCount;
   
   // Array de notas
   JsonArray notes = doc.createNestedArray("notes");
@@ -195,6 +243,34 @@ void sendBufferToInflux() {
     note["d"] = midiBuffer[i].duration;
     note["c"] = midiBuffer[i].midiChannel;
   }
+
+#if ENABLE_RAW_LOGGING
+  if (rawCount > 0) {
+    JsonArray rawBlocks = doc.createNestedArray("raw_blocks");
+    size_t index = rawBlockReadIndex;
+    for (size_t i = 0; i < rawCount; i++) {
+      const RawSampleBlock &block = rawBlockQueue[index];
+      JsonObject rawObj = rawBlocks.createNestedObject();
+      rawObj["t"] = block.timestamp;
+
+      JsonArray samples = rawObj.createNestedArray("samples");
+      for (size_t s = 0; s < RAW_BLOCK_SAMPLE_COUNT; s++) {
+        samples.add(block.samples[s]);
+      }
+
+      JsonObject stats = rawObj.createNestedObject("stats");
+      stats["max"] = block.maximum;
+      stats["min"] = block.minimum;
+      stats["avg"] = block.average;
+      stats["std"] = block.stddev;
+      stats["delta"] = block.delta;
+
+      rawObj["threshold"] = block.threshold;
+
+      index = (index + 1) % RAW_BLOCK_QUEUE_SIZE;
+    }
+  }
+#endif
   
   // Serializar a String
   String payload;
@@ -207,7 +283,13 @@ void sendBufferToInflux() {
   if (debugSerial) {
     Serial.print("→ Enviando ");
     Serial.print(bufferIndex);
-    Serial.print(" notas, tamaño: ");
+    Serial.print(" notas");
+#if ENABLE_RAW_LOGGING
+    Serial.print(" y ");
+    Serial.print(rawCount);
+    Serial.print(" bloques crudos");
+#endif
+    Serial.print(", tamaño: ");
     Serial.print(payload.length());
     Serial.println(" bytes");
   }
@@ -217,14 +299,21 @@ void sendBufferToInflux() {
   
   if (success) {
     if (debugSerial) {
-      Serial.print("✓ MQTT: Enviadas ");
+      Serial.print("✓ MQTT: Envío exitoso (notas=");
       Serial.print(bufferIndex);
-      Serial.print(" notas exitosamente");
-      Serial.println();
+      Serial.print(", crudos=");
+      Serial.print(rawCount);
+      Serial.println(")");
     }
     
-    // Limpiar buffer
+    // Limpiar buffers
     bufferIndex = 0;
+#if ENABLE_RAW_LOGGING
+    rawBlockCount = 0;
+    rawBlockReadIndex = 0;
+    rawBlockWriteIndex = 0;
+#endif
+    consecutiveSendFailures = 0;
   } else {
     if (debugSerial) {
       Serial.print("✗ MQTT: Falló envío - Estado MQTT: ");
@@ -240,7 +329,26 @@ void sendBufferToInflux() {
         Serial.println("⚠ Conexión perdida durante envío");
       }
     }
+    consecutiveSendFailures++;
+    if (consecutiveSendFailures >= MAX_CONSECUTIVE_SEND_FAILURES) {
+      if (debugSerial) {
+        Serial.print("⚠ MQTT: Descartando buffers tras ");
+        Serial.print(consecutiveSendFailures);
+        Serial.println(" intentos fallidos");
+      }
+      bufferIndex = 0;
+#if ENABLE_RAW_LOGGING
+      rawBlockCount = 0;
+      rawBlockReadIndex = 0;
+      rawBlockWriteIndex = 0;
+#endif
+      forceSendPending = false;
+      consecutiveSendFailures = 0;
+      lastBufferSend = millis();
+    }
   }
+
+  return success;
 }
 
 // ============================================================================
@@ -249,8 +357,82 @@ void sendBufferToInflux() {
 void checkBufferTimer() {
   // Verificar si ha pasado el intervalo de envío
   if (millis() - lastBufferSend >= BUFFER_SEND_INTERVAL) {
-    sendBufferToInflux();
+    flushMQTTPayload();
     lastBufferSend = millis();
+  }
+}
+
+#if ENABLE_RAW_LOGGING
+void queueRawBlock(unsigned long timestamp,
+                   const unsigned long *sampleValues,
+                   byte sampleCount,
+                   unsigned long maximum,
+                   unsigned long minimum,
+                   unsigned long average,
+                   float stddev,
+                   unsigned long delta,
+                   float thresholdValue) {
+  if (sampleCount > RAW_BLOCK_SAMPLE_COUNT) {
+    sampleCount = RAW_BLOCK_SAMPLE_COUNT;
+  }
+
+  if (rawBlockCount >= RAW_BLOCK_QUEUE_SIZE) {
+    forceSendPending = true;
+    flushMQTTPayload();
+  }
+
+  if (rawBlockCount >= RAW_BLOCK_QUEUE_SIZE) {
+    rawBlockReadIndex = (rawBlockReadIndex + 1) % RAW_BLOCK_QUEUE_SIZE;
+    rawBlockCount--;
+    if (debugSerial) {
+      Serial.println("⚠ Cola de bloques crudos llena; descartando el más antiguo");
+    }
+  }
+
+  RawSampleBlock &block = rawBlockQueue[rawBlockWriteIndex];
+  block.timestamp = timestamp;
+  block.maximum = maximum;
+  block.minimum = minimum;
+  block.average = average;
+  block.stddev = stddev;
+  block.delta = delta;
+  block.threshold = thresholdValue;
+
+  memset(block.samples, 0, sizeof(block.samples));
+  for (byte i = 0; i < sampleCount; i++) {
+    block.samples[i] = sampleValues[i];
+  }
+
+  rawBlockWriteIndex = (rawBlockWriteIndex + 1) % RAW_BLOCK_QUEUE_SIZE;
+  rawBlockCount++;
+
+  if (rawBlockCount >= RAW_BLOCK_QUEUE_SIZE) {
+    forceSendPending = true;
+  }
+}
+#endif
+
+void flushMQTTPayload() {
+#if ENABLE_RAW_LOGGING
+  const bool hasRawBlocks = rawBlockCount > 0;
+#else
+  const bool hasRawBlocks = false;
+#endif
+
+  if (bufferIndex == 0 && !hasRawBlocks) {
+    return;
+  }
+
+  const unsigned long now = millis();
+  const bool intervalElapsed = (now - lastBufferSend) >= BUFFER_SEND_INTERVAL;
+
+  if (!forceSendPending && !intervalElapsed) {
+    return;
+  }
+
+  if (sendBufferToInflux()) {
+    forceSendPending = false;
+    lastBufferSend = now;
   }
 }
 

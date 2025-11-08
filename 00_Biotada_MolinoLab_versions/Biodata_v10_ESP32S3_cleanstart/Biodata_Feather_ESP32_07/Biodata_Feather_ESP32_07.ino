@@ -49,8 +49,9 @@ extern PubSubClient mqtt;
 void setupMQTT();
 void reconnectMQTT();
 void addNoteToBuffer(byte note, byte velocity, int duration, byte channel);
-void sendBufferToInflux();
+bool sendBufferToInflux();
 void checkBufferTimer();
+void flushMQTTPayload();
 // ============================================================================
 
 // Wifi Credentials ahora están en secrets.h
@@ -88,7 +89,7 @@ byte wifiMIDI = 0;           //do all the fancy wifi stuff and RTP MIDI over App
 byte bleMIDI = 0;            //bluetooth midi
 byte usbmidi = 1;            //usb MIDI connection - ESP32 v3.3.2 native TinyUSB
 byte midiMode = 1;           //change mode for serial, ble, wifi, usb
-byte wifiActive = 0;         //turn the wifi on and off, needed for wifiMIDI apparently
+byte wifiActive = 1;         //turn the wifi on and off, needed for wifiMIDI apparently
 byte bleActive = 0;          //toggle for connected disconnected?  prob not needed, use library
 byte midiControl = channel;  // 1; //use channel 16 to recieve parameter changes? fancy! or recv on base channel...hmm
 //setting channel to 11 or 12 often helps simply computer midi routing setups

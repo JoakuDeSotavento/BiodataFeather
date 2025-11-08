@@ -138,6 +138,7 @@ void loop() {
     }
     mqtt.loop();
     checkBufferTimer();
+    flushMQTTPayload();
   }
 
   // Mange LEDs
