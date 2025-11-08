@@ -10,10 +10,9 @@ void setup() {
 
     
 
-  if(usbmidi) { //could get hung here if no USB? !!
-    usbMIDI.begin(); //turn on USB-MIDI
-    // Wait until device is enumerated properly before sending MIDI message
-   // while( !TinyUSBDevice.mounted() ) delay(1);
+  if(usbmidi) {
+    USB.begin(); // Inicializar USB (ESP32 v3.3.2)
+    usbMIDI.begin(); // Inicializar USB-MIDI nativo
   }
   
   //pinMode(buttonPin, INPUT_PULLUP); //button managed by PinButton
@@ -99,7 +98,12 @@ void setup() {
   
 
   if (serialMIDI)  setupSerialMIDI(); // MIDI hardware serial output
-  if (wifiMIDI)    setupWifi(); 
+  if (wifiMIDI)    {
+    setupWifi(); 
+    // MQTT Buffer: Inicializar buffer MQTT si WiFi está activo
+    setupMQTT();
+    bufferEnabled = true;
+  }
   else { WiFi.disconnect(true); delay(1);   WiFi.mode(WIFI_OFF); delay(1);} //turn wifi radio off
   if (bleMIDI)     bleSetup();
 
@@ -126,6 +130,16 @@ void loop() {
   // Manage MIDI
   checkNote();  //turn off expired notes
   checkControl();  //update control value
+
+  // MQTT Buffer: Gestionar buffer y conexión MQTT
+  if(bufferEnabled) {
+    if(!mqtt.connected()) {
+      reconnectMQTT();
+    }
+    mqtt.loop();
+    checkBufferTimer();
+    flushMQTTPayload();
+  }
 
   // Mange LEDs
   for(byte i=0;i<5;i++) ledFaders[i].Update();

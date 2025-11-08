@@ -249,6 +249,7 @@ bool sendBufferToInflux() {
     note["n"] = midiBuffer[i].note;
     note["v"] = midiBuffer[i].velocity;
     note["d"] = midiBuffer[i].duration;
+    note["c"] = midiBuffer[i].midiChannel;
   }
 
 #if ENABLE_RAW_LOGGING

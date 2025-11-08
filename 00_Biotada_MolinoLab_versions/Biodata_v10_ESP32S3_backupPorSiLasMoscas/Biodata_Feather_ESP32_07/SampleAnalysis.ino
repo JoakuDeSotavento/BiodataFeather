@@ -10,6 +10,20 @@
  */
 //*******
 
+#ifndef ENABLE_RAW_LOGGING
+#define ENABLE_RAW_LOGGING 1
+#endif
+
+#if ENABLE_RAW_LOGGING
+void queueRawBlock(unsigned long timestamp,
+                   unsigned long maximum,
+                   unsigned long minimum,
+                   unsigned long average,
+                   float stddev,
+                   unsigned long delta,
+                   float thresholdValue);
+#endif
+
 
 void sample(){
   if(sampleIndex < samplesize) {
@@ -54,6 +68,16 @@ void analyzeSample()
     stdevi = sqrt(stdevi / analysize - averg * averg); //calculate stdevu
     if (stdevi < 1) { stdevi = 1.0; } //min stdevi of 1
     delta = maxim - minim; 
+
+#if ENABLE_RAW_LOGGING
+    queueRawBlock(currentMillis,
+                  maxim,
+                  minim,
+                  averg,
+                  stdevi,
+                  delta,
+                  threshold);
+#endif
     
     //**********perform change detection 
     if (delta > (stdevi * threshold)){
@@ -103,11 +127,6 @@ void analyzeSample()
        Serial.print(map(delta,0,300,0,100)); Serial.print(","); //delta 
        Serial.print(change*90); //Serial.print(","); //change detected      
       //change and Note/CC
-      // int _threshold = map(constrain(threshold*stdevi,0,300),0,300,0,100));
-      // int _delta = map(delta,0,300,0,100));
-      // int _change = change*90;
-
-      // sendOSCMessage(_threshold, _delta, _change);
       /*
       if(change) { // duration, velocity, note, CC
         Serial.print(change*100); Serial.print(","); //change detected

@@ -10,7 +10,7 @@ void setup() {
 
     
 
-  if(usbmidi) { 
+  if(usbmidi) {
     USB.begin(); // Inicializar USB (ESP32 v3.3.2)
     usbMIDI.begin(); // Inicializar USB-MIDI nativo
   }

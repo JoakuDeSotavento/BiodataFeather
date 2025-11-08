@@ -16,8 +16,6 @@
 
 #if ENABLE_RAW_LOGGING
 void queueRawBlock(unsigned long timestamp,
-                   const unsigned long *sampleValues,
-                   byte sampleCount,
                    unsigned long maximum,
                    unsigned long minimum,
                    unsigned long average,
@@ -72,13 +70,7 @@ void analyzeSample()
     delta = maxim - minim; 
 
 #if ENABLE_RAW_LOGGING
-    unsigned long rawBlock[analysize];
-    for (byte i = 0; i < analysize; i++) {
-      rawBlock[i] = sampanalysis[i];
-    }
     queueRawBlock(currentMillis,
-                  rawBlock,
-                  analysize,
                   maxim,
                   minim,
                   averg,
