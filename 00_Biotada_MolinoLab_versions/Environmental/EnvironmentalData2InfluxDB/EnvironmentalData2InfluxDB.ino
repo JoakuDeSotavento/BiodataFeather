@@ -26,7 +26,7 @@ String sensorId;
 
 // ---------- Timing ----------
 unsigned long lastRead = 0;
-const unsigned long READ_INTERVAL = 30000; // 1 Hz
+const unsigned long READ_INTERVAL = 300000 ; // 5 mins
 
 // ---------- Sea level ----------
 float seaLevel;
@@ -97,6 +97,8 @@ void setup() {
     sensorId = "env_";
     sensorId += String(uniq);
   }
+
+  Serial.println(sensorId);
 
   // TLS
   tlsClient.setInsecure(); // Solo para pruebas

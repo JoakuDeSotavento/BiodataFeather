@@ -24,4 +24,4 @@ Especially after researching the relevant files, you may ask up to 5 clarifying 
 - **Make the plan as tight as possible** without losing any of the critical details from the user's requirements.
 
 ## Output Format:
-**Write the plan into an `<N>_PLAN.md` file with the next available feature number**
+**Write the plan into an `Plan_<N>_<W>.md` file with the next available feature number** where <W> is the resume in one word of the functionality
