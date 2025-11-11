@@ -138,7 +138,6 @@ void loop() {
     }
     mqtt.loop();
     checkBufferTimer();
-    flushMQTTPayload();
   }
 
   if (wifiMIDI) {

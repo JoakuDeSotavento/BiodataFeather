@@ -68,6 +68,22 @@ PubSubClient mqtt(mqttWifiClient);
 // Sensor ID (generado desde MAC)
 String sensorID = "";
 
+// Buffer estático para serialización JSON (evita fragmentación de memoria)
+static char mqttPayloadBuffer[MQTT_MAX_PACKET_SIZE];
+
+// Topic MQTT pre-construido (evita construcciones repetitivas)
+static char mqttTopic[64];
+
+// Tamaño máximo pre-calculado del JSON document
+// Base: JSON_OBJECT_SIZE(6) + JSON_ARRAY_SIZE(MIDI_BUFFER_SIZE) + MIDI_BUFFER_SIZE * JSON_OBJECT_SIZE(5)
+// Raw: JSON_ARRAY_SIZE(RAW_BLOCK_QUEUE_SIZE) + RAW_BLOCK_QUEUE_SIZE * JSON_OBJECT_SIZE(7)
+// Margen: 300 bytes adicionales
+#if ENABLE_RAW_LOGGING
+#define MAX_JSON_CAPACITY (JSON_OBJECT_SIZE(6) + JSON_ARRAY_SIZE(MIDI_BUFFER_SIZE) + MIDI_BUFFER_SIZE * JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(RAW_BLOCK_QUEUE_SIZE) + RAW_BLOCK_QUEUE_SIZE * JSON_OBJECT_SIZE(7) + 300)
+#else
+#define MAX_JSON_CAPACITY (JSON_OBJECT_SIZE(6) + JSON_ARRAY_SIZE(MIDI_BUFFER_SIZE) + MIDI_BUFFER_SIZE * JSON_OBJECT_SIZE(5) + 300)
+#endif
+
 void flushMQTTPayload();
 
 // ============================================================================
@@ -100,6 +116,9 @@ void setupMQTT() {
   mqtt.setServer(MQTT_BROKER, MQTT_PORT);
   mqtt.setKeepAlive(15);
   mqtt.setBufferSize(MQTT_MAX_PACKET_SIZE);  // Aumentar tamaño máximo de mensajes
+  
+  // Construir topic MQTT una sola vez (evita construcciones repetitivas)
+  snprintf(mqttTopic, sizeof(mqttTopic), "%s/%s/midi", MQTT_BASE_TOPIC, sensorID.c_str());
   
   // Intentar conectar
   reconnectMQTT();
@@ -217,7 +236,7 @@ bool sendBufferToInflux() {
     }
   }
   
-  // Construir payload JSON
+  // Calcular capacidad JSON basada en datos actuales
   const size_t baseSize = JSON_OBJECT_SIZE(6); // sensor_id, timestamp, count, raw_count, notes, raw_blocks
   const size_t notesArraySize = JSON_ARRAY_SIZE(bufferIndex);
   const size_t notesObjectsSize = bufferIndex * JSON_OBJECT_SIZE(5); // t,n,v,d,c
@@ -229,7 +248,9 @@ bool sendBufferToInflux() {
   const size_t rawBlocksSize = 0;
 #endif
   const size_t capacity = baseSize + notesArraySize + notesObjectsSize + rawBlocksSize + 300;
-  DynamicJsonDocument doc(capacity);
+  
+  // Usar StaticJsonDocument con tamaño pre-calculado (evita asignaciones dinámicas)
+  StaticJsonDocument<MAX_JSON_CAPACITY> doc;
   
   // Metadata
   doc["sensor_id"] = sensorID;
@@ -268,12 +289,16 @@ bool sendBufferToInflux() {
   }
 #endif
   
-  // Serializar a String
-  String payload;
-  serializeJson(doc, payload);
+  // Serializar directamente al buffer estático (evita creación de String)
+  size_t payloadLength = serializeJson(doc, mqttPayloadBuffer, sizeof(mqttPayloadBuffer));
   
-  // Construir topic
-  String topic = String(MQTT_BASE_TOPIC) + "/" + sensorID + "/midi";
+  // Verificar si el payload cabe en el buffer
+  if (payloadLength == 0) {
+    if (debugSerial) {
+      Serial.println("✗ MQTT: Error - Payload demasiado grande para el buffer");
+    }
+    return false;
+  }
   
   // Verificar tamaño del payload antes de enviar
   if (debugSerial) {
@@ -286,11 +311,11 @@ bool sendBufferToInflux() {
     Serial.print(" bloques crudos");
 #endif
     Serial.print(", tamaño: ");
-    Serial.print(payload.length());
+    Serial.print(payloadLength);
     Serial.println(" bytes");
   }
   
-  // Publicar en MQTT
+  // Publicar en MQTT usando buffer estático y topic pre-construido
   bool success = false;
   const uint8_t maxAttempts = MQTT_SEND_MAX_RETRIES + 1;
   uint8_t attempt = 0;
@@ -304,7 +329,7 @@ bool sendBufferToInflux() {
       Serial.println(")");
     }
 
-    success = mqtt.publish(topic.c_str(), payload.c_str(), false); // QoS 0
+    success = mqtt.publish(mqttTopic, mqttPayloadBuffer, false); // QoS 0
     if (success) {
       break;
     }
