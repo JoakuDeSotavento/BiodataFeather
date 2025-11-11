@@ -11,6 +11,7 @@
 extern bool deviceIdentityReady;
 extern int deviceUniq;
 extern String deviceSuffix;
+extern unsigned long currentMillis;  // Variable global de tiempo desde Main.ino
 void ensureDeviceIdentity();
 
 // Configuración del buffer
@@ -58,6 +59,14 @@ bool bufferEnabled = false;
 bool forceSendPending = false;
 // static bool wifiDisconnectedLogged = false;
 
+// Variables de estado para reconexión MQTT no bloqueante
+unsigned long mqttReconnectLastAttempt = 0;
+uint8_t mqttReconnectAttempts = 0;
+uint8_t mqttReconnectState = 0; // 0: idle, 1: attempting, 2: waiting
+const unsigned long MQTT_RECONNECT_INITIAL_DELAY = 1000;  // 1 segundo inicial
+const unsigned long MQTT_RECONNECT_MAX_DELAY = 5000;       // Máximo 5 segundos
+const uint8_t MQTT_RECONNECT_MAX_ATTEMPTS = 3;
+
 // Cliente MQTT
 WiFiClient mqttWifiClient;
 PubSubClient mqtt(mqttWifiClient);
@@ -85,6 +94,16 @@ static char mqttTopic[64];
 #endif
 
 void flushMQTTPayload();
+
+// Función auxiliar para verificar si hay datos pendientes en el buffer
+bool hasPendingMQTTData() {
+  if (bufferIndex > 0) return true;
+#if ENABLE_RAW_LOGGING
+  if (rawBlockCount > 0) return true;
+#endif
+  if (forceSendPending) return true;
+  return false;
+}
 
 // ============================================================================
 // SETUP MQTT - Inicialización del cliente MQTT
@@ -120,54 +139,136 @@ void setupMQTT() {
   // Construir topic MQTT una sola vez (evita construcciones repetitivas)
   snprintf(mqttTopic, sizeof(mqttTopic), "%s/%s/midi", MQTT_BASE_TOPIC, sensorID.c_str());
   
+  // Inicializar variables de reconexión
+  mqttReconnectLastAttempt = 0;
+  mqttReconnectAttempts = 0;
+  mqttReconnectState = 0;
+  
   // Intentar conectar
   reconnectMQTT();
   
   // Inicializar timestamp de último envío
-  lastBufferSend = millis();
+  lastBufferSend = currentMillis;
 }
 
 // ============================================================================
-// RECONNECT MQTT - Reconexión al broker MQTT con backoff exponencial
+// RECONNECT MQTT - Reconexión al broker MQTT no bloqueante con backoff exponencial
 // ============================================================================
 void reconnectMQTT() {
   // Solo intentar reconectar si WiFi está conectado
   if (WiFi.status() != WL_CONNECTED) {
+    mqttReconnectState = 0;
+    mqttReconnectAttempts = 0;
     return;
   }
   
-  int retryCount = 0;
-  int retryDelay = 1000; // Empezar con 1 segundo
-  
-  while (!mqtt.connected() && retryCount < 3) {
-    if (debugSerial) {
-      Serial.print("Conectando MQTT... intento ");
-      Serial.println(retryCount + 1);
-    }
-    
-    // Intentar conexión con credenciales
-    if (mqtt.connect(sensorID.c_str(), MQTT_USER, MQTT_PASSWORD)) {
-      if (debugSerial) {
-        Serial.println("✓ MQTT conectado");
-      }
-      return;
-    } else {
-      if (debugSerial) {
-        Serial.print("✗ MQTT falló, rc=");
-        Serial.print(mqtt.state());
-        Serial.print(" - Reintentando en ");
-        Serial.print(retryDelay / 1000);
-        Serial.println("s");
-      }
-      
-      delay(retryDelay);
-      retryCount++;
-      retryDelay = min(retryDelay * 2, 5000); // Backoff exponencial, máx 5s
-    }
+  // Si ya está conectado, resetear estado
+  if (mqtt.connected()) {
+    mqttReconnectState = 0;
+    mqttReconnectAttempts = 0;
+    return;
   }
   
-  if (!mqtt.connected() && debugSerial) {
-    Serial.println("✗ MQTT: No se pudo conectar después de 3 intentos");
+  unsigned long retryDelay = MQTT_RECONNECT_INITIAL_DELAY;
+  
+  // Calcular delay exponencial basado en número de intentos
+  for (uint8_t i = 0; i < mqttReconnectAttempts; i++) {
+    retryDelay = min(retryDelay * 2, MQTT_RECONNECT_MAX_DELAY);
+  }
+  
+  // Máquina de estados no bloqueante
+  switch (mqttReconnectState) {
+    case 0: // Estado idle - iniciar reconexión
+      mqttReconnectAttempts = 0;
+      mqttReconnectLastAttempt = currentMillis;
+      mqttReconnectState = 1;
+      if (debugSerial) {
+        Serial.print("Conectando MQTT... intento ");
+        Serial.println(mqttReconnectAttempts + 1);
+      }
+      // Intentar conexión inmediatamente
+      if (mqtt.connect(sensorID.c_str(), MQTT_USER, MQTT_PASSWORD)) {
+        if (debugSerial) {
+          Serial.println("✓ MQTT conectado");
+        }
+        mqttReconnectState = 0;
+        mqttReconnectAttempts = 0;
+        return;
+      } else {
+        mqttReconnectAttempts++;
+        mqttReconnectState = 2; // Cambiar a estado de espera
+        if (debugSerial) {
+          Serial.print("✗ MQTT falló, rc=");
+          Serial.print(mqtt.state());
+          Serial.print(" - Esperando ");
+          Serial.print(retryDelay / 1000);
+          Serial.println("s antes del siguiente intento");
+        }
+      }
+      break;
+      
+    case 1: // Estado attempting - intentar conexión
+      if (mqtt.connect(sensorID.c_str(), MQTT_USER, MQTT_PASSWORD)) {
+        if (debugSerial) {
+          Serial.println("✓ MQTT conectado");
+        }
+        mqttReconnectState = 0;
+        mqttReconnectAttempts = 0;
+        return;
+      } else {
+        mqttReconnectAttempts++;
+        mqttReconnectState = 2;
+        mqttReconnectLastAttempt = currentMillis;
+        if (debugSerial) {
+          Serial.print("✗ MQTT falló, rc=");
+          Serial.print(mqtt.state());
+          Serial.print(" - Esperando ");
+          Serial.print(retryDelay / 1000);
+          Serial.println("s antes del siguiente intento");
+        }
+      }
+      break;
+      
+    case 2: // Estado waiting - esperar antes del siguiente intento
+      if (currentMillis - mqttReconnectLastAttempt >= retryDelay) {
+        // Verificar si no excedimos el máximo de intentos
+        if (mqttReconnectAttempts >= MQTT_RECONNECT_MAX_ATTEMPTS) {
+          if (debugSerial) {
+            Serial.println("✗ MQTT: No se pudo conectar después de 3 intentos");
+          }
+          mqttReconnectState = 0;
+          mqttReconnectAttempts = 0;
+          return;
+        }
+        // Intentar reconectar
+        mqttReconnectState = 1;
+        mqttReconnectLastAttempt = currentMillis;
+        if (debugSerial) {
+          Serial.print("Conectando MQTT... intento ");
+          Serial.println(mqttReconnectAttempts + 1);
+        }
+        if (mqtt.connect(sensorID.c_str(), MQTT_USER, MQTT_PASSWORD)) {
+          if (debugSerial) {
+            Serial.println("✓ MQTT conectado");
+          }
+          mqttReconnectState = 0;
+          mqttReconnectAttempts = 0;
+          return;
+        } else {
+          mqttReconnectAttempts++;
+          mqttReconnectState = 2;
+          if (debugSerial) {
+            Serial.print("✗ MQTT falló, rc=");
+            Serial.print(mqtt.state());
+            Serial.print(" - Esperando ");
+            // Calcular nuevo delay para el siguiente intento
+            unsigned long nextDelay = min(retryDelay * 2, MQTT_RECONNECT_MAX_DELAY);
+            Serial.print(nextDelay / 1000);
+            Serial.println("s antes del siguiente intento");
+          }
+        }
+      }
+      break;
   }
 }
 
@@ -185,7 +286,7 @@ void addNoteToBuffer(byte note, byte velocity, int duration, byte channel) {
   }
   
   // Agregar nota al buffer
-  midiBuffer[bufferIndex].timestamp = millis();
+  midiBuffer[bufferIndex].timestamp = currentMillis;
   midiBuffer[bufferIndex].note = note;
   midiBuffer[bufferIndex].velocity = velocity;
   midiBuffer[bufferIndex].duration = duration;
@@ -237,7 +338,8 @@ bool sendBufferToInflux() {
   }
   
   // Calcular capacidad JSON basada en datos actuales
-  const size_t baseSize = JSON_OBJECT_SIZE(6); // sensor_id, timestamp, count, raw_count, notes, raw_blocks
+  // Campos abreviados: sid (sensor_id), ts (timestamp), c (count), rc (raw_count)
+  const size_t baseSize = JSON_OBJECT_SIZE(6); // sid, ts, c, rc, notes, raw_blocks
   const size_t notesArraySize = JSON_ARRAY_SIZE(bufferIndex);
   const size_t notesObjectsSize = bufferIndex * JSON_OBJECT_SIZE(5); // t,n,v,d,c
 #if ENABLE_RAW_LOGGING
@@ -252,11 +354,12 @@ bool sendBufferToInflux() {
   // Usar StaticJsonDocument con tamaño pre-calculado (evita asignaciones dinámicas)
   StaticJsonDocument<MAX_JSON_CAPACITY> doc;
   
-  // Metadata
-  doc["sensor_id"] = sensorID;
-  doc["timestamp"] = millis();
-  doc["count"] = bufferIndex;
-  doc["raw_count"] = rawCount;
+  // Metadata con campos abreviados para reducir tamaño del payload
+  // Mapeo: sid=sensor_id, ts=timestamp, c=count, rc=raw_count
+  doc["sid"] = sensorID;      // sensor_id abreviado
+  doc["ts"] = currentMillis;  // timestamp abreviado
+  doc["c"] = bufferIndex;     // count abreviado
+  doc["rc"] = rawCount;       // raw_count abreviado
   
   // Array de notas
   JsonArray notes = doc.createNestedArray("notes");
@@ -383,7 +486,7 @@ bool sendBufferToInflux() {
     rawBlockWriteIndex = 0;
 #endif
     forceSendPending = false;
-    lastBufferSend = millis();
+    lastBufferSend = currentMillis;
   }
 
   return success;
@@ -393,10 +496,10 @@ bool sendBufferToInflux() {
 // CHECK BUFFER TIMER - Verificar si es momento de enviar el buffer
 // ============================================================================
 void checkBufferTimer() {
-  // Verificar si ha pasado el intervalo de envío
-  if (millis() - lastBufferSend >= BUFFER_SEND_INTERVAL) {
+  // Verificar si ha pasado el intervalo de envío (usando currentMillis global)
+  if (currentMillis - lastBufferSend >= BUFFER_SEND_INTERVAL) {
     flushMQTTPayload();
-    lastBufferSend = millis();
+    lastBufferSend = currentMillis;
   }
 }
 
@@ -450,8 +553,8 @@ void flushMQTTPayload() {
     return;
   }
 
-  const unsigned long now = millis();
-  const bool intervalElapsed = (now - lastBufferSend) >= BUFFER_SEND_INTERVAL;
+  // Usar currentMillis global en lugar de llamar millis() nuevamente
+  const bool intervalElapsed = (currentMillis - lastBufferSend) >= BUFFER_SEND_INTERVAL;
 
   if (!forceSendPending && !intervalElapsed) {
     return;
@@ -459,7 +562,7 @@ void flushMQTTPayload() {
 
   if (sendBufferToInflux()) {
     forceSendPending = false;
-    lastBufferSend = now;
+    lastBufferSend = currentMillis;
   }
 }
 
