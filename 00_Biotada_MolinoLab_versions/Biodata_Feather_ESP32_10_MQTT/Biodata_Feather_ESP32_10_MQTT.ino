@@ -75,6 +75,7 @@ void addNoteToBuffer(byte note, byte velocity, int duration, byte channel);
 bool sendBufferToInflux();
 void checkBufferTimer();
 void flushMQTTPayload();
+bool hasPendingMQTTData();  // Verificar si hay datos pendientes en el buffer
 // ============================================================================
 
 // Wifi Credentials ahora están en secrets.h

@@ -136,7 +136,10 @@ void loop() {
     if(!mqtt.connected()) {
       reconnectMQTT();
     }
-    mqtt.loop();
+    // Optimización: llamar mqtt.loop() solo cuando hay conexión o datos pendientes
+    if(mqtt.connected() || hasPendingMQTTData()) {
+      mqtt.loop();
+    }
     checkBufferTimer();
   }
 
