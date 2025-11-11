@@ -33,13 +33,36 @@
 // MQTT/InfluxDB Buffer - Includes y configuración
 // ============================================================================
 #include <WiFiClient.h>
+#include <WiFiMulti.h>
+#include <esp_system.h>
+#include <esp_mac.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "secrets.h"  // Credenciales WiFi, MQTT e InfluxDB
 
-// Referencias a WiFi desde secrets.h para compatibilidad con código existente
-char ssid[] = WIFI_SSID;
-char pass[] = WIFI_PASSWORD;
+WiFiMulti wifiMulti;
+String currentSSID;
+bool deviceIdentityReady = false;
+int deviceUniq = -1;
+String deviceSuffix = "";
+String bleDeviceName = "";
+
+void ensureDeviceIdentity();
+
+void ensureDeviceIdentity() {
+  if (deviceIdentityReady) {
+    return;
+  }
+  uint8_t mac[6];
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
+  deviceUniq = 0;
+  for (int i = 0; i < 6; i++) {
+    deviceUniq += mac[i];
+  }
+  deviceSuffix = String(deviceUniq);
+  bleDeviceName = "BIODATA " + deviceSuffix;
+  deviceIdentityReady = true;
+}
 
 // Variables externas del buffer MQTT (definidas en MQTTInflux.ino)
 extern bool bufferEnabled;
@@ -437,15 +460,22 @@ void setupWifi() {
     }
   }
 
-  if (debugSerial) {
-    Serial.print(F("Connecting to Wifi Network: "));
-    Serial.print(ssid);
-    Serial.print(F("  pass: "));
-    Serial.print(pass);
-    Serial.println();
+  WiFi.mode(WIFI_STA);
+  wifiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
+#if defined(WIFI_SSID_2) && defined(WIFI_PASSWORD_2)
+  if (WIFI_SSID_2[0] != '\0') {
+    wifiMulti.addAP(WIFI_SSID_2, WIFI_PASSWORD_2);
   }
+#endif
+#if defined(WIFI_SSID_3) && defined(WIFI_PASSWORD_3)
+  if (WIFI_SSID_3[0] != '\0') {
+    wifiMulti.addAP(WIFI_SSID_3, WIFI_PASSWORD_3);
+  }
+#endif
 
-  WiFi.begin(ssid, pass);
+  if (debugSerial) {
+    Serial.println(F("Intentando conexión WiFi (hasta 15 s)..."));
+  }
 
   //could get 'stuck' here if we can't connect ... hmm..
   //timeout after some duration  to allow Serial MIDI or
@@ -453,7 +483,7 @@ void setupWifi() {
   //but it doesn't seem to get stuck .. at home duh!
   bool ledToggle = 1;
   unsigned long wifiMillis = millis();
-  while (WiFi.status() != WL_CONNECTED) {
+  while (wifiMulti.run() != WL_CONNECTED) {
     delay(500);
     if (debugSerial) Serial.print(F("."));
     //flash LED on and off toggle
@@ -467,6 +497,7 @@ void setupWifi() {
 
   //was wifi connectionsuccessfuL?
   if (WiFi.status() == WL_CONNECTED) {
+    currentSSID = WiFi.SSID();
     if (debugSerial) Serial.println(F("WiFi connected"));
     //solid LED
     ledFaders[0].Set(0, 0);                       //turn off Red
@@ -474,25 +505,19 @@ void setupWifi() {
     delay(1000);
     ledFaders[2].Set(0, 4000);  //fade out green LED
   } else {
+    currentSSID = "";
     if (debugSerial) Serial.println(F("WiFi NOT connected"));
     ledFaders[0].Set(ledFaders[0].maxBright, 0);  //turn on Red
   }
-  //try to use MAC address or other ID
-  //for unique name on each ble and wifi RTP device
-  //          uint64_t chipid = ESP.getEfuseMac();
-  //          byte chip = (uint32_t)chipid;
-  //          String chipStr = "BIODATA ";
-  //          chipStr.concat(chip);
-  //          Serial.println(chipStr);
+  ensureDeviceIdentity();
   byte mac[6];
   WiFi.macAddress(mac);
   String macAddr = String(mac[0], HEX) + String(mac[1], HEX) + String(mac[2], HEX) + String(mac[3], HEX) + String(mac[4], HEX) + String(mac[5], HEX);
-  int uniq = mac[0] + mac[1] + mac[2] + mac[3] + mac[4] + mac[5];
   if (debugSerial) {
     Serial.print("MAC Address: ");
     Serial.println(macAddr);
     Serial.print("Biodata ");
-    Serial.println(uniq);
+    Serial.println(deviceUniq);
     Serial.print(F("IP address is "));
     Serial.println(WiFi.localIP());
   }
@@ -521,12 +546,8 @@ void setupWifi() {
 
 void bleSetup() {
 
-  byte mac[6];
-  WiFi.macAddress(mac);
-  String macAddr = String(mac[0], HEX) + String(mac[1], HEX) + String(mac[2], HEX) + String(mac[3], HEX) + String(mac[4], HEX) + String(mac[5], HEX);
-  int uniq = mac[0] + mac[1] + mac[2] + mac[3] + mac[4] + mac[5];
-  String chipStr = "BIODATA ";
-  chipStr.concat(uniq);
+  ensureDeviceIdentity();
+  String chipStr = bleDeviceName;
   char chipString[15];
   chipStr.toCharArray(chipString, 15);
   BLEDevice::init(chipString);
@@ -577,12 +598,12 @@ void checkButton() {
   if (button.wasReleased()) {
     if (debugSerial) {
       Serial.println("---***---***---ButtonClick***---***---***");
+      ensureDeviceIdentity();
       byte mac[6];
       WiFi.macAddress(mac);
       String macAddr = String(mac[0], HEX) + String(mac[1], HEX) + String(mac[2], HEX) + String(mac[3], HEX) + String(mac[4], HEX) + String(mac[5], HEX);
-      int uniq = mac[0] + mac[1] + mac[2] + mac[3] + mac[4] + mac[5];
       Serial.print("Biodata ");
-      Serial.println(uniq);
+      Serial.println(deviceUniq);
       Serial.print("MIDI Channel ");
       Serial.println(channel);
       Serial.print("ScaleIndex ");
@@ -607,10 +628,14 @@ void checkButton() {
 
       if (wifiMIDI) {
         //wifi connection status
-        Serial.print(ssid);
-        Serial.print(F("  pass: "));
-        Serial.print(pass);
-        Serial.println();
+        Serial.print("SSID configurado/activo: ");
+        if (WiFi.status() == WL_CONNECTED) {
+          Serial.println(WiFi.SSID());
+        } else if (currentSSID.length()) {
+          Serial.println(currentSSID);
+        } else {
+          Serial.println(WIFI_SSID);
+        }
         if (WiFi.status() == WL_CONNECTED) {
           Serial.println("Wifi Connected");
         } else Serial.println("WiFi Not Connected");

@@ -141,6 +141,10 @@ void loop() {
     flushMQTTPayload();
   }
 
+  if (wifiMIDI) {
+    wifiMulti.run();
+  }
+
   // Mange LEDs
   for(byte i=0;i<5;i++) ledFaders[i].Update();
   

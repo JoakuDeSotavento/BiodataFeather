@@ -8,6 +8,11 @@
 // Nota: Los includes y secrets.h están en el archivo principal
 #include <cstring>
 
+extern bool deviceIdentityReady;
+extern int deviceUniq;
+extern String deviceSuffix;
+void ensureDeviceIdentity();
+
 // Configuración del buffer
 #ifndef ENABLE_RAW_LOGGING
 #define ENABLE_RAW_LOGGING 1
@@ -69,20 +74,13 @@ void flushMQTTPayload();
 // SETUP MQTT - Inicialización del cliente MQTT
 // ============================================================================
 void setupMQTT() {
-  // Generar Sensor ID desde MAC address
-  byte mac[6];
-  WiFi.macAddress(mac);
-  
-  #ifdef SENSOR_ID_MANUAL
-    sensorID = SENSOR_ID_MANUAL;
-  #else
-    int uniq = 0;
-    for (int i = 0; i < 6; i++) {
-      uniq += mac[i];
-    }
-    sensorID = "biodata_";
-    sensorID += String(uniq);
-  #endif
+  ensureDeviceIdentity();
+
+#ifdef SENSOR_ID_MANUAL
+  sensorID = SENSOR_ID_MANUAL;
+#else
+  sensorID = "biodata_" + deviceSuffix;
+#endif
   
   if (debugSerial) {
     Serial.println("=== MQTT Buffer Setup ===");
