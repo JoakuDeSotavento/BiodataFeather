@@ -18,11 +18,11 @@ extern byte debugSerial;
 
 // Sensores ambientales
 Adafruit_LTR329 ltr;
-DFRobot_BME68x_I2C bme(0x77); // I2C address 0x77
+DFRobot_BME68x_I2C bme(0x77);  // I2C address 0x77
 
 // Timing para lectura ambiental
 unsigned long lastEnvironmentalRead = 0;
-const unsigned long ENVIRONMENTAL_READ_INTERVAL = 300000; // 5 minutos (300000 ms)
+const unsigned long ENVIRONMENTAL_READ_INTERVAL = 300000;  // 5 minutos (300000 ms)
 
 // Estado de inicialización
 bool environmentalSensorsReady = false;
@@ -31,7 +31,7 @@ bool bme688Ready = false;
 
 // Sea level para calibración de presión (opcional)
 #ifdef CALIBRATE_PRESSURE
-float seaLevel = 101325.0; // Presión estándar a nivel del mar (Pa)
+float seaLevel = 101325.0;  // Presión estándar a nivel del mar (Pa)
 #endif
 
 // Prototipos de funciones
@@ -104,7 +104,7 @@ void setupEnvironmentalSensors() {
     bme.update();
     seaLevel = bme.readSeaLevel(525.0);
     if (isnan(seaLevel) || seaLevel <= 0) {
-      seaLevel = 101325.0; // 1 atm estándar
+      seaLevel = 101325.0;  // 1 atm estándar
       if (debugSerial) {
         Serial.println("Sea level inválido, usando 101325 Pa");
       }
@@ -162,13 +162,13 @@ void readEnvironmentalSensors() {
   if (bme688Ready) {
     // Iniciar conversión del BME688
     bme.startConvert();
-    delay(100); // Mínimo para estabilizar
+    delay(100);  // Mínimo para estabilizar
     bme.update();
 
     // Leer datos del BME688
-    temperatura = bme.readTemperature() / 100.0; // Convertir de centésimas a grados
+    temperatura = bme.readTemperature() / 100.0;  // Convertir de centésimas a grados
     presion = bme.readPressure();
-    humedad = bme.readHumidity() / 1000.0; // Convertir de milésimas a porcentaje
+    humedad = bme.readHumidity() / 1000.0;  // Convertir de milésimas a porcentaje
     gas = bme.readGasResistance();
     altitud = bme.readAltitude();
   }
@@ -220,13 +220,13 @@ void sendEnvironmentalData(float temp, float pres, float hum, float gas, float a
 
   // Construir topic MQTT
   String mqttTopic = String(MQTT_BASE_TOPIC) + "/" + String(MQTT_ENV_TOPIC) + "/" + sensorID;
-  
+
   // Serializar JSON
   char mqttPayload[256];
   serializeJson(doc, mqttPayload);
 
   // Enviar vía MQTT
-  bool success = mqtt.publish(mqttTopic.c_str(), mqttPayload, false); // QoS 0
+  bool success = mqtt.publish(mqttTopic.c_str(), mqttPayload, false);  // QoS 0
 
   if (debugSerial) {
     if (success) {
@@ -253,4 +253,3 @@ void checkEnvironmentalTimer() {
     readEnvironmentalSensors();
   }
 }
-
