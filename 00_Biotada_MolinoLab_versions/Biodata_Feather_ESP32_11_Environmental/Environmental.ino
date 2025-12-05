@@ -219,7 +219,7 @@ void sendEnvironmentalData(float temp, float pres, float hum, float gas, float a
   doc["infrarrojo"] = infrared;
 
   // Construir topic MQTT
-  String mqttTopic = String(MQTT_BASE_TOPIC) + "/" + String(MQTT_ENV_TOPIC) + "/" + sensorID;
+  String mqttTopic = String(MQTT_ENV_TOPIC) + "/" + sensorID;
 
   // Serializar JSON
   char mqttPayload[256];
