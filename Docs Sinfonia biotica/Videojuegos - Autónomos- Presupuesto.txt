@@ -1,0 +1,137 @@
+	
+AYUDAS PARA LA PROMOCIÓN DEL SECTOR DEL VIDEOJUEGO, DEL PÓDCAST Y DE OTRAS FORMAS DE CREACIÓN DIGITAL
+
+PRESUPUESTO DE INGRESOS Y GASTOS 
+
+CONSIDERACIONES GENERALES
+- El total de ingresos debe coincidir con el total de gastos de la tabla Resumen de Gastos.
+Será necesario respetar lo establecido en el artículo 9 de la convocatoria. Los gastos se presentarán con el mayor nivel de desagregación y detalle posible (se pueden adjuntar a este modelo los documentos que justifiquen este presupuesto)
+
+-  Deberá respetarse la estructura de este Modelo de Presupuesto de Ingresos y Gastos.
+Se podrá añadir las filas extra que resulten necesarias para cumplimentar los datos.
+
+-  Los importes señalados en el presupuesto no incluirán el IVA.
+
+
+TÍTULO DEL PROYECTO:
+Sinfonía biótica: Organismos en red
+
+
+1. INGRESOS
+Se compone de tres apartados. Deben cumplimentarse todos.
+
+CONCEPTO	EUROS
+1.1 Ayuda para Ia promoción del sector del videojuego, del pódcast y de otras formas de creación digital (Máximo 80.000 €)	24.700,00 €
+	
+Procedencia del resto de aportaciones dinerarias	EUROS
+1.2 Otros ingresos: desglosar procedencia.
+
+El porcentaje mínimo de otros ingresos sobre el coste total del proyecto dependerá de la ayuda solicitada:
+    •  Ayuda solicitada hasta 40.000€ mínimo 20%
+    •  Ayuda de 40.000,01 a 60.000€ mínimo 30%
+    •  Ayuda de 60.000,01 a 80.000€ mínimo 40%	Fondos propios	6.700,00 €
+		
+		
+		
+		
+	
+1.3 TOTAL DE INGRESOS (Apartado 1.1 + Apartado 1.2)	31.400 €
+
+
+
+
+2. GASTOS
+Se compone de tres tablas y deben cumplimentarse todas. En el caso de no existir gastos correspondientes a alguna de las categorías relacionadas en la columna de la izquierda
+de las dos primeras tablas, esas partidas podrán dejarse sin rellenar.
+
+2.1. GASTOS FINANCIADOS CON LA AYUDA PARA LA PROMOCIÓN DEL SECTOR DEL VIDEOJUEGO, DEL PÓDCAST Y DE OTRAS FORMAS DE CREACIÓN DIGITAL
+Subvencionables según el ANEXO I de la convocatoria. El importe total de los gastos incluidos en esta tabla no podrá superar los 80.000€ y deberá coincidir con la cantidad solicitada a las Ayudas para la promoción del sector del videojuego, del pódcast y de otras formas de creación digital
+
+Gastos de personal: nóminas de trabajadores empleados
+por el solicitante	Denominación
+de la partida	Desglosar conceptos de gasto (corresponderán a actuaciones descritas en la memoria del proyecto)	EUROS
+			
+	Total de nóminas de trabajadores	
+Gastos
+de los trabajos realizados
+por el autónomo (máximo 20%
+de la ayuda)	Denominación
+de la partida	Desglosar conceptos de gasto (corresponderán a actuaciones descritas en la memoria del proyecto)	EUROS
+	Recopilación y digitalización de material	Identificación, grabación de video y audio de 6 árboles y 2 tipos de hongos	2800 €
+	Desarrollo de la experiencia	Procesamiento de grabaciones y generación de modelos árboles	1800 €
+	Total trabajos realizados por el autónomo	4600 €
+Gastos de proveedores externos: facturas de adquisición
+de bienes
+o prestación
+de servicios	Denominación
+de la partida	Desglosar conceptos de gasto (corresponderán a actuaciones descritas en la memoria del proyecto)	EUROS (SIN IVA)
+	Fabricación de dispositivos	Diseño, fabricación y testeo centinelas del bosque	1600 €
+		Fabricación biodatas para monitorización en tiempo real	2600 €
+		 Creación de prototipo háptico	1400 €
+	Desarrollo de la experiencia	Diseño sonoro nuevos seres y escenas	3600 €
+		Mejoras técnicas y evolución constante de la experiencia	3100 €
+	
+Equipamiento	Materiales centinelas del bosque	980 €
+		Equipamiento de grabación de audio (Geofón, micrófonos, microfono binaural, cascos, mesa mezcla)	2000 €
+	Distribución	Estudio de usabilidad	1300€
+		Gastos derivados de presentación en eventos internacionales	1200 €
+		Gastos derivados de presentación a concursos	900 €
+	Comunicación	Publicidad en redes	500 €
+		Edición y publicación de vídeos	920 €
+	Total de facturas de proveedores externos	20100 €
+Gastos protocolarios
+y de representación (Sólo para eventos o exposiciones: máximo 5%
+de la ayuda)	Denominación
+de la partida	Desglosar conceptos de gasto (corresponderán a actuaciones descritas en la memoria del proyecto)	EUROS (SIN IVA)
+			
+	Total de facturas de gastos protocolarios y representación	
+2.1 Total de gastos financiados con cargo a la Ayuda para la promoción del sector del videojuego, del pódcast y de otras formas de creación digital	23.420 €
+
+2.2. OTROS GASTOS DEL PROYECTO
+Financiados con los ingresos distintos a la Ayuda para la promoción del sector del videojuego, del pódcast y de otras formas de creación digital. Dependiendo de la ayuda solicitada el porcentaje mínimo de OTROS GASTOS DEL PROYECTO sobre la cuantía total del proyecto será el 20%, el 30% o el 40%. (ver tabla 1.2 de Otros Ingresos)
+
+Gastos de personal: nóminas de trabajadores empleados
+por el solicitante	Denominación de la partida	Desglosar conceptos de gasto (corresponderán a actuaciones descritas en la memoria del proyecto)	EUROS
+			
+	Total de nóminas de trabajadores	
+Gastos
+de los trabajos realizados
+por el autónomo	Denominación de la partida	Desglosar conceptos de gasto (corresponderán a actuaciones descritas en la memoria del proyecto)	EUROS
+	Desarrollo de la experiencia	 Integración de los nuevos árboles y hongos en la experiencia	1500 €
+	Comunicación	Documentación del proceso, grabación de videos	800 €
+	Total trabajos realizados por el autónomo	2300 €
+Gastos de proveedores externos: facturas de adquisición
+de bienes
+o prestación
+de servicios	Denominación de la partida	Desglosar conceptos de gasto (corresponderán a actuaciones descritas en la memoria del proyecto)	EUROS (SIN IVA)
+	Desarrollo de la experiencia	Instalación y testeo de funcionamiento de dispositivos en tiempo real	1700 €
+		Base de datos online para datos en tiempo real y API	1300 €
+	Distribución	Directorio de árboles online con datos abiertos y accesibles	1400 €
+	Total de facturas de proveedores externos	4400 €
+Gastos ordinarios,
+de gestión
+y administración (máximo 25%
+de “Otros gastos
+del proyecto”)	Denominación de la partida	Desglosar conceptos de gasto (corresponderán a actuaciones descritas en la memoria del proyecto)	EUROS (SIN IVA)
+			
+	Total de gastos ordinarios, de gestión y administración	
+
+2.2 Total de gastos financiados con cargo a los ingresos ajenos
+a la ayuda solicitada	6700 €
+
+
+
+
+
+2.3 RESUMEN DE GASTOS
+
+GASTOS	EUROS (SIN IVA)
+Total de gastos financiados con la ayuda para la promoción del sector del videojuego, del pódcast y de otras formas de creación digital
+(Apartado 2.1)	24700 €
+Total Otros gastos del proyecto
+(Apartado 2.2)	6700 €
+2.3 TOTAL DE GASTOS
+(Esta cantidad debe coincidir con el Total de Ingresos)	31400 €
+
+*Deberá respetarse la estructura de este Modelo de Presupuesto de Ingresos y Gastos, pudiéndose añadir las filas extra que resulten necesarias para cumplimentar los datos.
+

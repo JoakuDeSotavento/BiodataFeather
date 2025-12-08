@@ -1,0 +1,46 @@
+- Revisar tecnologías para ver si podemos ejecutarlo en web
+- Reunión de revisión e identificación de dificultades y mejoras
+
+## Pendientes
+
+María
+
+# Retos para este año
+- Hacer más eficiente el proceso de trabajo, hacernos la vida más fácil
+- Standalone en quest
+- Pensar la narrativa de usuario ¿Qué hacer? ¿Qué mejorar? 
+- Contexto de la experiencia, que funcione a nivel 
+- Mucha información sin orden y sin estar clara
+- ¿Cómo vamos a acceder a la información de la bbdd online?
+- Buscar a alguien que haga el game design? La narrativa
+
+
+# Otra persona en el equipo
+
+¿Qué es sinfonía biótica?
+
+Encontrar una manera de comunicar de forma eficiente el discurso visual/sonoro
+Necesitamos una persona que nos ayude a traducir nuestras ideas al contexto
+
+- Con experiencia en el diseño narrativo de experiencias interactivas, game design, diseño experiencias interactivas
+- Que tenga experiencia con unreal engine
+
+
+
+# Últimos retoques 2024
+
+- En la escena 0 no hay música, ni al aparecer el título ni después, poner cualquier cosa
+- En la escena de la encina no se cambia el splat
+- Cada vez que me alejo  y vuelvo a acercarme a la encina se reproduce desde el principio de nuevo, quiero que se reproduzca y se baje el volumen si me alejo pero no se pare de reproducir
+- En el bosque de laurisilva no se escucha nada hasta entrar en las bolas, no habçía una atmosfera?
+- En las secuoyas que haya un poco ás de gravedad, como en la luna, como en los sueños, caes muy despacito
+- Tampoco hay atmosfera sonora, ¿Qué pasó?
+- Em el mando izquierdo hacia los lados da saltos
+- En qué escena podíamos influir en el cuerpo sonoro del árbol?
+
+
+
+# 
+
+- Reuniones semanales, una semana de catch up y otra de playtest
+- 
