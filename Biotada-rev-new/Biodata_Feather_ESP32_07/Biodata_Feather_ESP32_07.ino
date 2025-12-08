@@ -94,7 +94,7 @@ int root = 0; //initialize for root
 
 //Debug and MIDI output Settings ********
 byte debugSerial = 1; //debugging serial messages
-byte rawSerial = 1; // raw biodata stream via serial data
+byte rawSerial = 0; // raw biodata stream via serial data
 byte serialMIDI = 1; //write serial data to MIDI hardware output
 byte wifiMIDI = 0; //do all the fancy wifi stuff and RTP MIDI over AppleMIDI
 byte bleMIDI = 1; //bluetooth midi

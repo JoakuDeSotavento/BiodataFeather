@@ -35,12 +35,12 @@
 
 // Wifi Credentials ~~~~~~~~~~~!!!!
 
-char ssid[] = "lattice";              //  your network SSID (name)
-char pass[] = "joakinator16180";      // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "Dragon";              //  your network SSID (name)
+char pass[] = "1234567890";      // your network password (use for WPA, or use as key for WEP)
                                       // ~~~~~~~~~~~~~!!!!
                                       //  Set the MIDI Channel of this node
 byte channel = 1;                     //
-IPAddress local_IP(192, 168, 1, 120);  //use this IP
+IPAddress local_IP(192, 168, 183, 129);  //use this IP
 bool staticIP = false;                // true;  //toggle for dynamic IP
 //static IP
 
@@ -48,8 +48,8 @@ bool staticIP = false;                // true;  //toggle for dynamic IP
 
 #include <OSCMessage.h>
 
-const char *oscIP = "192.168.1.35";  // Dirección IP de destino
-const int oscPort = 8000;            // Puerto de destino
+const char *oscIP = "192.168.183.62";  // Dirección IP de destino
+const int oscPort = 12000;            // Puerto de destino
 
 WiFiUDP Udp;
 
@@ -92,7 +92,7 @@ byte rawSerial = 0;          //raw biodata stream via serial data
 byte rawOSC = 0;             //raw data stream to the local ip
 byte serialMIDI = 1;         //write serial data to MIDI hardware output
 byte wifiMIDI = 0;           //do all the fancy wifi stuff and RTP MIDI over AppleMIDI
-byte bleMIDI = 0;            //bluetooth midi
+byte bleMIDI = 1;            //bluetooth midi
 byte usbmidi = 1;            //usb MIDI connection <Adafruit_TinyUSB.h> for ESP32S3
 byte midiMode = 0;           //change mode for serial, ble, wifi, usb
 byte wifiActive = 0;         //turn the wifi on and off, needed for wifiMIDI apparently
