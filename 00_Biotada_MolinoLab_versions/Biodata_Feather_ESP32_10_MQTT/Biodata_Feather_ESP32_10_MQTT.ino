@@ -409,8 +409,7 @@ MIDImessage controlMessage;  //manage MIDImessage data for Control Message (CV o
 //setups for each MIDI type, provide led display output
 void setupSerialMIDI() {
   if (debugSerial) Serial.println("MIDI set on Serial1 31250");
-  const int MIDI_TX_PIN = 10;  // GPIO10 conectado al minijack MIDI
-  Serial1.begin(31250, SERIAL_8N1, -1, MIDI_TX_PIN);  // UART sin RX, solo TX
+  Serial1.begin(31250);  // Usa TX por defecto (GPIO 39) = minijack PCB Feather ESP32-S3
 }
 
 void checkKnob() {
