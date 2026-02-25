@@ -2,17 +2,18 @@
 //
 // -----------------------------------------------------------------------------
 void setup() {
+  ensureDeviceIdentity();
 
   if (debugSerial || rawSerial) Serial.begin(115200); // Serial baud for debugging and raw
   
       //load from EEPROM memory
   EEPROM.begin(EEPROM_SIZE);
 
-    
-
   if(usbmidi) {
-    USB.begin(); // Inicializar USB (ESP32 v3.3.2)
+    USB.productName(("Biodata " + deviceSuffix).c_str());
     usbMIDI.begin(); // Inicializar USB-MIDI nativo
+    delay(500);
+    USB.begin(); // Inicializar USB (ESP32 v3.3.2)
   }
   
   //pinMode(buttonPin, INPUT_PULLUP); //button managed by PinButton
