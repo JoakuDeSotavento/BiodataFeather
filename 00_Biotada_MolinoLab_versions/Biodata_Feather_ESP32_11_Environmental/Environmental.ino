@@ -6,6 +6,7 @@
 
 #include "Adafruit_LTR329_LTR303.h"
 #include "DFRobot_BME68x.h"
+#include <WiFi.h>
 #include <Wire.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
@@ -63,21 +64,23 @@ void setupEnvironmentalSensors() {
   // Inicializar BME688 (continuar aunque LTR329 haya fallado)
   bme688Ready = false;
   uint8_t rslt = 1;
+  const uint8_t kBmeMaxAttempts = 3;
+  const unsigned long kBmeRetryMs = 500;
   uint8_t attempts = 0;
-  while (rslt != 0 && attempts < 5) {
+  while (rslt != 0 && attempts < kBmeMaxAttempts) {
     rslt = bme.begin();
     if (rslt != 0) {
       if (debugSerial) {
         Serial.println("BME68x begin failure, reintentando...");
       }
-      delay(2000);
+      delay(kBmeRetryMs);
       attempts++;
     }
   }
 
   if (rslt != 0) {
     if (debugSerial) {
-      Serial.println("✗ BME68x no encontrado después de 5 intentos");
+      Serial.println("✗ BME68x no encontrado en el arranque (se reintentará en el ciclo)");
     }
     bme688Ready = false;
   } else {
@@ -87,12 +90,13 @@ void setupEnvironmentalSensors() {
     }
   }
 
-  // Si ningún sensor está disponible, salir
+  // Si ningún sensor está disponible: no bloquear el resto del firmware; reintentar más tarde
   if (!ltr329Ready && !bme688Ready) {
     if (debugSerial) {
-      Serial.println("✗ Ningún sensor ambiental disponible - Deshabilitando módulo ambiental");
+      Serial.println("✗ Ningún sensor ambiental ahora — biodata/MIDI siguen; reintento periódico");
     }
     environmentalSensorsReady = false;
+    lastEnvironmentalRead = millis();
     return;
   }
 
@@ -130,7 +134,7 @@ void setupEnvironmentalSensors() {
   }
 
   environmentalSensorsReady = true;
-  lastEnvironmentalRead = currentMillis;
+  lastEnvironmentalRead = millis();
 
   if (debugSerial) {
     Serial.println("=== Sensores Ambientales Listos ===");
@@ -194,11 +198,13 @@ void readEnvironmentalSensors() {
     Serial.printf("Infrared: %u\n", infrared);
   }
 
-  // Enviar datos vía MQTT
-  if (mqtt.connected()) {
+  // Enviar por MQTT solo con WiFi y broker listos
+  if (WiFi.status() == WL_CONNECTED && mqtt.connected()) {
     sendEnvironmentalData(temperatura, presion, humedad, gas, altitud, visible_plus_ir, infrared);
-  } else {
-    if (debugSerial) {
+  } else if (debugSerial) {
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("⚠ WiFi sin conexión - datos ambientales no enviados por MQTT");
+    } else {
       Serial.println("⚠ MQTT no conectado - Datos ambientales no enviados");
     }
   }
@@ -244,6 +250,13 @@ void sendEnvironmentalData(float temp, float pres, float hum, float gas, float a
 // ============================================================================
 void checkEnvironmentalTimer() {
   if (!environmentalSensorsReady) {
+    if (currentMillis - lastEnvironmentalRead >= ENVIRONMENTAL_READ_INTERVAL) {
+      lastEnvironmentalRead = currentMillis;
+      if (debugSerial) {
+        Serial.println("=== Reintento de sensores ambientales ===");
+      }
+      setupEnvironmentalSensors();
+    }
     return;
   }
 

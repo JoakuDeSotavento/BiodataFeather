@@ -6,6 +6,7 @@
 // No modifica ninguna funcionalidad MIDI existente.
 // ============================================================================
 // Nota: Los includes y secrets.h están en el archivo principal
+#include <WiFi.h>
 #include <cstring>
 
 extern bool deviceIdentityReady;
@@ -144,10 +145,10 @@ void setupMQTT() {
   mqttReconnectAttempts = 0;
   mqttReconnectState = 0;
   
-  // Intentar conectar
-  reconnectMQTT();
+  if (WiFi.status() == WL_CONNECTED) {
+    reconnectMQTT();
+  }
   
-  // Inicializar timestamp de último envío
   lastBufferSend = currentMillis;
 }
 
@@ -276,6 +277,10 @@ void reconnectMQTT() {
 // ADD NOTE TO BUFFER - Agregar una nota MIDI al buffer
 // ============================================================================
 void addNoteToBuffer(byte note, byte velocity, int duration, byte channel) {
+  if (!bufferEnabled || WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
   // Verificar si el buffer está lleno
   if (bufferIndex >= MIDI_BUFFER_SIZE) {
     if (debugSerial) {
@@ -306,6 +311,10 @@ bool sendBufferToInflux() {
 #endif
 
   if (bufferIndex == 0 && rawCount == 0) {
+    return false;
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
     return false;
   }
 
@@ -511,6 +520,10 @@ void queueRawBlock(unsigned long timestamp,
                    float stddev,
                    unsigned long delta,
                    float thresholdValue) {
+  if (!bufferEnabled || WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
   if (rawBlockCount >= RAW_BLOCK_QUEUE_SIZE) {
     forceSendPending = true;
     flushMQTTPayload();
