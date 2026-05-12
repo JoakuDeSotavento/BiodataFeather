@@ -28,8 +28,8 @@ void setNote(int value, int velocity, long duration, int notechannel)
               }
       }
       
-      // MQTT Buffer: Agregar nota al buffer si está habilitado
-      if(bufferEnabled && mqtt.connected()) {
+      // MQTT Buffer: acumular solo con WiFi (el envío exige WiFi + MQTT en sendBufferToInflux)
+      if (bufferEnabled && WiFi.status() == WL_CONNECTED) {
         addNoteToBuffer(value, velocity, duration, notechannel);
       }
 //        if (debugSerial) { 

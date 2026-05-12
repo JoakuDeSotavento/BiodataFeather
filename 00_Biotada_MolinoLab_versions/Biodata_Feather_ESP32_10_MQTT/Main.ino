@@ -132,16 +132,17 @@ void loop() {
   checkNote();  //turn off expired notes
   checkControl();  //update control value
 
-  // MQTT Buffer: Gestionar buffer y conexión MQTT
+  // MQTT Buffer: solo con WiFi asociado (evita reconectar/publicar sin enlace)
   if(bufferEnabled) {
-    if(!mqtt.connected()) {
-      reconnectMQTT();
+    if(WiFi.status() == WL_CONNECTED) {
+      if(!mqtt.connected()) {
+        reconnectMQTT();
+      }
+      if(mqtt.connected() || hasPendingMQTTData()) {
+        mqtt.loop();
+      }
+      checkBufferTimer();
     }
-    // Optimización: llamar mqtt.loop() solo cuando hay conexión o datos pendientes
-    if(mqtt.connected() || hasPendingMQTTData()) {
-      mqtt.loop();
-    }
-    checkBufferTimer();
   }
 
   if (wifiMIDI) {
