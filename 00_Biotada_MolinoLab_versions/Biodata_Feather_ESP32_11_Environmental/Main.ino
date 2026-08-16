@@ -64,7 +64,7 @@ void setup() {
          bleMIDI = 1;
          wifiMIDI = 0;
          //channel = 1;  //declared at top
-         scaleSelect = scalePenta;
+         applyScale(defScale);
          root = 0;
 
      ledFaders[4].Set(0, 0); //does this set immediately?
@@ -96,11 +96,7 @@ void setup() {
   channel = midiChannel; //need two bytes to hold up to 16 channels!!
   root = rootByte;
   
-                       if(scaleIndex == 0) scaleSelect = scaleChrom; 
-                       if(scaleIndex == 1) scaleSelect = scaleMinor; 
-                       if(scaleIndex == 2) scaleSelect = scaleMajor; 
-                       if(scaleIndex == 3) scaleSelect = scalePenta; 
-                       if(scaleIndex == 4) scaleSelect = scaleIndian; 
+  applyScale(scaleIndex);
   wifiMIDI = wifiPower;
   bleMIDI = blePower;
   

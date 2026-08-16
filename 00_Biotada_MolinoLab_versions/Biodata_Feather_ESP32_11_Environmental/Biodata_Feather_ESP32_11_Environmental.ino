@@ -97,16 +97,41 @@ const byte polyphony = 5;  // 1; //mono  // number of notes to track at a given 
 
 //******************************
 //set scaled values, sorted array, first element scale length
-//the whole scaling algorithm needs to be refactored ;)
-//int scaleDiaMinor[]  = {7, 0, 2, 3, 5, 7, 8, 10};
-int scalePenta[] = { 5, 0, 3, 5, 7, 9 };
-int scaleMajor[] = { 7, 0, 2, 4, 5, 7, 9, 11 };
-int scaleIndian[] = { 7, 0, 1, 1, 4, 5, 8, 10 };
-int scaleMinor[] = { 7, 0, 2, 3, 5, 7, 8, 10 };
+// indices 0-3 keep previous EEPROM mapping; 4 replaces the broken Indian scale
 int scaleChrom[] = { 13, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-//enter the scale name here to use
+int scaleMinor[] = { 7, 0, 2, 3, 5, 7, 8, 10 };
+int scaleMajor[] = { 7, 0, 2, 4, 5, 7, 9, 11 };
+int scalePenta[] = { 5, 0, 3, 5, 7, 9 };
+int scalePentaMaj[] = { 5, 0, 2, 4, 7, 9 };
+int scaleDorian[] = { 7, 0, 2, 3, 5, 7, 9, 10 };
+int scaleMixolydian[] = { 7, 0, 2, 4, 5, 7, 9, 10 };
+int scaleLydian[] = { 7, 0, 2, 4, 6, 7, 9, 11 };
+int scalePhrygian[] = { 7, 0, 1, 3, 5, 7, 8, 10 };
+int scaleHarmMinor[] = { 7, 0, 2, 3, 5, 7, 8, 11 };
+int scaleWhole[] = { 6, 0, 2, 4, 6, 8, 10 };
+int scaleHirajoshi[] = { 5, 0, 2, 3, 7, 8 };
+
+const byte scaleCount = 12;
+int *scaleList[] = {
+  scaleChrom, scaleMinor, scaleMajor, scalePenta,
+  scalePentaMaj, scaleDorian, scaleMixolydian, scaleLydian,
+  scalePhrygian, scaleHarmMinor, scaleWhole, scaleHirajoshi
+};
+const char* scaleName[] = {
+  "Chromatic", "Minor", "Major", "Penta Min",
+  "Penta Maj", "Dorian", "Mixolydian", "Lydian",
+  "Phrygian", "Harm Minor", "Whole Tone", "Hirajoshi"
+};
+
 int *scaleSelect = scaleChrom;  //initialize scaling
 byte defScale = 3;
+byte currentScale = 3;
+
+void applyScale(byte index) {
+  if (index >= scaleCount) index = defScale;
+  currentScale = index;
+  scaleSelect = scaleList[index];
+}
 
 int root = 0;  //initialize for root
 const char* rootNoteName[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
@@ -594,6 +619,14 @@ void bleSetup() {
 }
 
 
+void showBinaryLeds(int value) {
+  for (byte i = 0; i < 5; i++) ledFaders[i].Set(0, 0);
+  for (byte i = 0; i < 5; i++) {
+    if (value % 2) ledFaders[i].Set(ledFaders[i].maxBright, 0);
+    value = value / 2;
+  }
+}
+
 void checkButton() {
   //update the button and evaluate menu modes
   // **Bug** crash after scale change when notes are running
@@ -614,7 +647,9 @@ void checkButton() {
       Serial.print("MIDI Channel ");
       Serial.println(channel);
       Serial.print("ScaleIndex ");
-      Serial.println(EEPROM.read(0));
+      Serial.print(currentScale);
+      Serial.print(" ");
+      Serial.println(scaleName[currentScale]);
       Serial.print("Root ");
       Serial.print(root);
       Serial.print(" ");
@@ -623,8 +658,6 @@ void checkButton() {
       Serial.println(threshold);
       Serial.print("MAC Address: ");
       Serial.println(macAddr);
-      Serial.print("Note Scale: ");
-      Serial.println(modeValue);
       //MIDI Output Statuses
 
       if (usbmidi) Serial.println("USB MIDI On");
@@ -723,42 +756,16 @@ void checkButton() {
 
           for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //all off
 
-          if (menu == 0) {  // MIDI Scaling
-            modeValue = map(knobValue, 0, 4095, 0, 4);
-            //blink led during selection
-            if ((blinkTime + 150) < millis()) {
-              blinkToggle = !blinkToggle;
-              blinkTime = millis();
-            }
-            if (blinkToggle) ledFaders[modeValue].Set(ledFaders[modeValue].maxBright, 0);
-            if (menu != modeValue) ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  //red0
-
-            if (modeValue == 0) scaleSelect = scaleChrom;
-            if (modeValue == 1) scaleSelect = scaleMinor;
-            if (modeValue == 2) scaleSelect = scaleMajor;
-            if (modeValue == 3) scaleSelect = scalePenta;
-            if (modeValue == 4) scaleSelect = scaleIndian;
+          if (menu == 0) {  // MIDI Scaling 0-11, binary like channel
+            modeValue = map(knobValue, 0, 4095, 0, 12);
+            if (modeValue >= scaleCount) modeValue = scaleCount - 1;
+            applyScale(modeValue);  // apply live
+            showBinaryLeds(modeValue);
           }
           if (menu == 1) {  //MIDI Channel Selection
             modeValue = map(knobValue, 0, 4095, 1, 17);
             if (modeValue == 17) modeValue = 16;
-            //if((blinkTime + 150) < millis()) { blinkToggle = !blinkToggle; blinkTime = millis(); }
-            //if(blinkToggle) ledFaders[modeValue].Set(ledFaders[modeValue].maxBright,0);
-            //display channel in binary
-            int showChannel = modeValue;
-            for (byte i = 0; i < 5; i++) ledFaders[i].Set(0, 0);  //turn off
-            //convert to binary
-            int cursorPos = 0;
-            int binaryValue[5];
-            for (int i = 0; i < 5; i++) {
-              binaryValue[i] = showChannel % 2;
-              showChannel = showChannel / 2;
-            }
-
-            for (byte i = 0; i < 5; i++) {
-              //if this bit should be on then turn it on...
-              if (binaryValue[i]) ledFaders[i].Set(ledFaders[i].maxBright, 0);
-            }
+            showBinaryLeds(modeValue);
           }
           if (menu == 2) {  //Wifi Config
                             //display green LED for wifi mode, red if wifi off, yellow if wifi not conn, white if RTP connected
@@ -788,16 +795,7 @@ void checkButton() {
             modeValue = map(knobValue, 0, 4095, 0, 12);
             if (modeValue == 12) modeValue = 11;
             root = modeValue;  // apply live
-            int showRoot = modeValue;
-            for (byte i = 0; i < 5; i++) ledFaders[i].Set(0, 0);
-            int binaryValue[5];
-            for (int i = 0; i < 5; i++) {
-              binaryValue[i] = showRoot % 2;
-              showRoot = showRoot / 2;
-            }
-            for (byte i = 0; i < 5; i++) {
-              if (binaryValue[i]) ledFaders[i].Set(ledFaders[i].maxBright, 0);
-            }
+            showBinaryLeds(modeValue);
             ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  // white menu indicator
           }
 
@@ -824,11 +822,14 @@ void checkButton() {
             for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //all off
 
             if (menu == 0) {
-              EEPROM.write(0, modeValue);
+              applyScale(modeValue);
+              EEPROM.write(0, currentScale);
               // EEPROM.commit();
               if (debugSerial) {
                 Serial.print("MIDI Scale ");
-                Serial.println(modeValue);
+                Serial.print(currentScale);
+                Serial.print(" ");
+                Serial.println(scaleName[currentScale]);
               }
             }
             if (menu == 1) {

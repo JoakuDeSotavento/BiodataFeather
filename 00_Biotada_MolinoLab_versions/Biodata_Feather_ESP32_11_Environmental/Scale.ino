@@ -2,13 +2,13 @@
 
 
 int scaleSearch(int note, int scale[], int scalesize) {
- for(byte i=1;i<scalesize;i++) {
-  if(note == scale[i]) { return note; }
-  else { if(note < scale[i]) { return scale[i]; } } //highest scale value less than or equal to note
-  //otherwise continue search
- }
- //didn't find note and didn't pass note value, uh oh!
- return 6;//give arbitrary value rather than fail
+  // include last degree (loop was i < scalesize and skipped it)
+  for (byte i = 1; i <= scalesize; i++) {
+    if (note == scale[i]) { return note; }
+    if (note < scale[i]) { return scale[i]; }  // quantize up to next degree
+  }
+  // above the last degree: wrap to the tonic of the next octave
+  return scale[1] + 12;
 }
 
 
