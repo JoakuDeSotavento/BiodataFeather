@@ -11,6 +11,10 @@
 #include <ArduinoJson.h>
 #include "secrets.h"
 
+#ifndef MQTT_ENV_TOPIC
+#define MQTT_ENV_TOPIC "environmental"
+#endif
+
 // Variables externas
 extern PubSubClient mqtt;
 extern String sensorID;
