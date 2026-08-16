@@ -58,13 +58,14 @@ void setup() {
      while(ledFaders[4].isRunning) {
         ledFaders[4].Update();
      }
-     //reset memory - chromatic scale, channel 1, wifi off, ble on
-      EEPROM.write(0, defScale); EEPROM.write(1, channel); EEPROM.write(2,0); EEPROM.write(3,1);
+     //reset memory - chromatic scale, channel 1, wifi off, ble on, root C
+      EEPROM.write(0, defScale); EEPROM.write(1, channel); EEPROM.write(2,0); EEPROM.write(3,1); EEPROM.write(5, 0);
       EEPROM.commit();
          bleMIDI = 1;
          wifiMIDI = 0;
          //channel = 1;  //declared at top
          scaleSelect = scalePenta;
+         root = 0;
 
      ledFaders[4].Set(0, 0); //does this set immediately?
 
@@ -76,11 +77,11 @@ void setup() {
   byte wifiPower = EEPROM.read(2);
   byte blePower = EEPROM.read(3);
   byte keybyte = EEPROM.read(4);
-  if(keybyte != 1) { //if not initialized first time - Scale,channel,wifi,bluetooth, key
+  if(keybyte != 1) { //if not initialized first time - Scale,channel,wifi,bluetooth, key, root
     //init for millersville
     //EEPROM.write(0, 0); EEPROM.write(1, 1); EEPROM.write(2,1); EEPROM.write(3,0); EEPROM.write(4,1);
-     //normal init - ble ON, wifi OFF
-      EEPROM.write(0, defScale); EEPROM.write(1, channel); EEPROM.write(2,0); EEPROM.write(3,1); EEPROM.write(4,1);
+     //normal init - ble ON, wifi OFF, root C
+      EEPROM.write(0, defScale); EEPROM.write(1, channel); EEPROM.write(2,0); EEPROM.write(3,1); EEPROM.write(4,1); EEPROM.write(5, 0);
       EEPROM.commit();
       if (debugSerial) Serial.println("EEPROM Initialized - First time! BLE ON, WiFi OFF");
          scaleIndex = EEPROM.read(0);
@@ -88,8 +89,12 @@ void setup() {
          wifiPower = EEPROM.read(2);
          blePower = EEPROM.read(3);
   }
+
+  byte rootByte = EEPROM.read(5);
+  if(rootByte > 11) rootByte = 0; // uninitialized EEPROM on older devices
   
   channel = midiChannel; //need two bytes to hold up to 16 channels!!
+  root = rootByte;
   
                        if(scaleIndex == 0) scaleSelect = scaleChrom; 
                        if(scaleIndex == 1) scaleSelect = scaleMinor; 

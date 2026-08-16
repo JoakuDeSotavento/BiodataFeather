@@ -21,7 +21,7 @@
 3. LED display of wifi status, RTP status, battery status?
   Green Wifi Connected, White RTP connected, Yellow RTP disc conn, Blue Ble conn
   menus
-    Red - MIDI channel, Yellow - MIDI Scale, Green - WiFi on/off, Blue - Ble on/off, White - Battery level
+    Red - MIDI channel, Yellow - MIDI Scale, Green - WiFi on/off, Blue - Ble on/off, White - Root note
 4. Move key variables to top of .ino (channel, wifi cred, IP, blue/wifi mode)
 5. Velocity using CC80, mapping velocity range
 6. Enable CC, variable for cc number and mapping range
@@ -109,6 +109,7 @@ int *scaleSelect = scaleChrom;  //initialize scaling
 byte defScale = 3;
 
 int root = 0;  //initialize for root
+const char* rootNoteName[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
 //*******************************
 
 //Debug and MIDI output Settings ********
@@ -131,7 +132,7 @@ int rawSerialDelay = 0;
 // **************************************
 
 #include <EEPROM.h>
-#define EEPROM_SIZE 5  // scaleindex, midi channel, wifi, bluetooth, key
+#define EEPROM_SIZE 6  // scaleindex, midi channel, wifi, bluetooth, key, root
 
 
 // I/O Pin declarations
@@ -614,6 +615,10 @@ void checkButton() {
       Serial.println(channel);
       Serial.print("ScaleIndex ");
       Serial.println(EEPROM.read(0));
+      Serial.print("Root ");
+      Serial.print(root);
+      Serial.print(" ");
+      Serial.println(rootNoteName[root]);
       Serial.print("Threshold ");
       Serial.println(threshold);
       Serial.print("MAC Address: ");
@@ -673,7 +678,7 @@ void checkButton() {
       knobValue = analogRead(potPin);
       // if(abs(knobValue - prevKnob) > 45){
       //select range for each menu and check for click
-      menu = map(knobValue, 0, 4095, 0, 3);
+      menu = map(knobValue, 0, 4095, 0, 4);
 
       for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //turn leds off
                                                                 //turn on Menu LED
@@ -701,6 +706,7 @@ void checkButton() {
           if (menu == 1) Serial.println(" Channel");
           if (menu == 2) Serial.println(" Wifi");
           if (menu == 3) Serial.println(" Bluetooth");
+          if (menu == 4) Serial.println(" Root");
         }
         menuTimer = millis();
         while (menuTimer + 20000 > millis()) {
@@ -778,14 +784,22 @@ void checkButton() {
             if (blinkToggle) ledFaders[modeValue * 4].Set(ledFaders[modeValue].maxBright, 0);
             ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  //blue
           }
-          //                      if(menu==4) {
-          //                          int batt = batteryLevel*10;
-          //                          modeValue = map(batt, 32,44,0,4);
-          //                        if((blinkTime + 150) < millis()) { blinkToggle = !blinkToggle; blinkTime = millis(); }
-          //                        if(blinkToggle) ledFaders[modeValue].Set(ledFaders[modeValue].maxBright,0);
-          //                        if(modeValue != menu) ledFaders[menu].Set(ledFaders[menu].maxBright,0); //white
-          //
-          //                      }
+          if (menu == 4) {  // Root note 0=C .. 11=B
+            modeValue = map(knobValue, 0, 4095, 0, 12);
+            if (modeValue == 12) modeValue = 11;
+            root = modeValue;  // apply live
+            int showRoot = modeValue;
+            for (byte i = 0; i < 5; i++) ledFaders[i].Set(0, 0);
+            int binaryValue[5];
+            for (int i = 0; i < 5; i++) {
+              binaryValue[i] = showRoot % 2;
+              showRoot = showRoot / 2;
+            }
+            for (byte i = 0; i < 5; i++) {
+              if (binaryValue[i]) ledFaders[i].Set(ledFaders[i].maxBright, 0);
+            }
+            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  // white menu indicator
+          }
 
 
 
@@ -860,6 +874,16 @@ void checkButton() {
                 if (debugSerial) Serial.println("BLE On");
               }                             //turn on bluetooth
               ledFaders[menu].Set(0, 700);  //turn off Blue led
+            }
+            if (menu == 4) {
+              root = modeValue;
+              EEPROM.write(5, root);
+              if (debugSerial) {
+                Serial.print("Root ");
+                Serial.print(root);
+                Serial.print(" ");
+                Serial.println(rootNoteName[root]);
+              }
             }
             //                        if(menu == 4) { //display wifi signal level
             //                          for(byte i=0;i<5;i++) { ledFaders[i].Set(0,0); } //all off
