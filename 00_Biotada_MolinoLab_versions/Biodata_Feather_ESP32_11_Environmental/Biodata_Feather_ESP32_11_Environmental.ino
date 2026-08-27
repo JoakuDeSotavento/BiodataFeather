@@ -187,24 +187,44 @@ USBMIDI usbMIDI;
 #define SERVICE_UUID "03b80e5a-ede8-4b33-a751-6ce34ec4c700"
 #define CHARACTERISTIC_UUID "7772e5db-3868-4112-a1a9-f2669d106bf3"
 
-BLECharacteristic *pCharacteristic;
+BLECharacteristic *pCharacteristic = nullptr;
+BLEServer *bleServer = nullptr;
 bool deviceConnected = false;
+bool bleConnectFlashPending = false;
+unsigned long bleConnectFlashOffAt = 0;
 
 uint8_t midiPacket[] = {
   0x80,  // header
-  0x80,  // timestamp, not implemented
+  0x80,  // timestamp, not implemented (same as v10; hosts accept this)
   0x00,  // status
   0x3c,  // 0x3c == 60 == middle c
   0x00   // velocity
 };
 
+void sendBleMidi(byte status, byte data1, byte data2) {
+  if (!bleMIDI || !deviceConnected || pCharacteristic == nullptr) {
+    return;
+  }
+  midiPacket[0] = 0x80;
+  midiPacket[1] = 0x80;
+  midiPacket[2] = status;
+  midiPacket[3] = data1 & 0x7F;
+  midiPacket[4] = data2 & 0x7F;
+  pCharacteristic->setValue(midiPacket, 5);
+  pCharacteristic->notify();
+}
+
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
     deviceConnected = true;
+    bleConnectFlashPending = true;  // 1 s blue flash, handled in loop()
   };
 
   void onDisconnect(BLEServer *pServer) {
     deviceConnected = false;
+    bleConnectFlashPending = false;
+    bleConnectFlashOffAt = 0;
+    pServer->startAdvertising();  // keep advertising after disconnect
   }
 };
 
@@ -441,7 +461,8 @@ MIDImessage controlMessage;  //manage MIDImessage data for Control Message (CV o
 //setups for each MIDI type, provide led display output
 void setupSerialMIDI() {
   if (debugSerial) Serial.println("MIDI set on Serial1 31250");
-  Serial1.begin(31250);  // Usa TX por defecto (GPIO 39) = minijack PCB Feather ESP32-S3
+  const int MIDI_TX_PIN = 39;  // minijack PCB Feather ESP32-S3 (same as v10 default TX)
+  Serial1.begin(31250, SERIAL_8N1, -1, MIDI_TX_PIN);
 }
 
 void checkKnob() {
@@ -576,29 +597,41 @@ void setupWifi() {
   });
 }
 
+void bleStop() {
+  deviceConnected = false;
+  pCharacteristic = nullptr;
+  bleServer = nullptr;
+  if (BLEDevice::getInitialized()) {
+    BLEDevice::deinit(false);  // false = allow BLEDevice::init() later
+  }
+}
+
 void bleSetup() {
-
   ensureDeviceIdentity();
-  String chipStr = bleDeviceName;
-  char chipString[15];
-  chipStr.toCharArray(chipString, 15);
-  BLEDevice::init(chipString);
 
+  // BLEDevice::init() only runs once unless we deinit first
+  if (BLEDevice::getInitialized()) {
+    bleStop();
+    delay(50);
+  }
+
+  BLEDevice::init(bleDeviceName.c_str());
 
   if (debugSerial) {
     Serial.print("BiodataBLE ");
-    Serial.println(chipString);
+    Serial.println(bleDeviceName);
   }
   //bluetooth notification
   ledFaders[3].Set(ledFaders[3].maxBright, 0);
   delay(1000);
 
   // Create the BLE Server
-  BLEServer *pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
+  bleServer = BLEDevice::createServer();
+  static MyServerCallbacks bleCallbacks;
+  bleServer->setCallbacks(&bleCallbacks);
 
   // Create the BLE Service
-  BLEService *pService = pServer->createService(BLEUUID(SERVICE_UUID));
+  BLEService *pService = bleServer->createService(BLEUUID(SERVICE_UUID));
 
   // Create a BLE Characteristic
   pCharacteristic = pService->createCharacteristic(
@@ -612,8 +645,9 @@ void bleSetup() {
   // Start the service
   pService->start();
 
-  // Start advertising
-  BLEAdvertising *pAdvertising = pServer->getAdvertising();
+  // Same advertising as v10 (working BLE MIDI): library builds the packet.
+  // Custom scan-response data overwrote that packet and hid the MIDI UUID.
+  BLEAdvertising *pAdvertising = bleServer->getAdvertising();
   pAdvertising->addServiceUUID(pService->getUUID());
   pAdvertising->start();
 }
@@ -771,24 +805,27 @@ void checkButton() {
                             //display green LED for wifi mode, red if wifi off, yellow if wifi not conn, white if RTP connected
                             //turn knob to select (flashing) - Wifi Off - Red; Wifi On - White
 
-            //knob map to 0/1
-            modeValue = map(knobValue, 0, 4095, 0, 1);
+            // map(0,4095,0,1) is always 0 due to integer division; split the pot in half
+            modeValue = (knobValue > 2047) ? 1 : 0;
             //blink led during selection
             if ((blinkTime + 150) < millis()) {
               blinkToggle = !blinkToggle;
               blinkTime = millis();
             }
-            if (blinkToggle) ledFaders[modeValue * 4].Set(ledFaders[modeValue].maxBright, 0);
+            byte statusLed = modeValue * 4;  // red=off, white=on
+            if (blinkToggle) ledFaders[statusLed].Set(ledFaders[statusLed].maxBright, 0);
             ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  //green
           }
           if (menu == 3) {  //Bluetooth Config
             //display blue for ble mode, if discon
-            modeValue = map(knobValue, 0, 4095, 0, 1);
+            // left half = Off (red blink), right half = On (white blink)
+            modeValue = (knobValue > 2047) ? 1 : 0;
             if ((blinkTime + 150) < millis()) {
               blinkToggle = !blinkToggle;
               blinkTime = millis();
             }
-            if (blinkToggle) ledFaders[modeValue * 4].Set(ledFaders[modeValue].maxBright, 0);
+            byte statusLed = modeValue * 4;  // red=off, white=on
+            if (blinkToggle) ledFaders[statusLed].Set(ledFaders[statusLed].maxBright, 0);
             ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  //blue
           }
           if (menu == 4) {  // Root note 0=C .. 11=B
@@ -863,15 +900,19 @@ void checkButton() {
             if (menu == 3) {
               if (modeValue == 0) {
                 bleMIDI = 0;
-                btStop();
+                bleStop();
                 EEPROM.write(3, 0);
                 if (debugSerial) Serial.println("BLE Off");
               }  //turn off bluetooth
               if (modeValue == 1) {
                 bleMIDI = 1;
-                btStart();
-                bleSetup();
                 EEPROM.write(3, 1);
+                if (!BLEDevice::getInitialized()) {
+                  bleSetup();
+                } else {
+                  ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
+                  delay(1000);
+                }
                 if (debugSerial) Serial.println("BLE On");
               }                             //turn on bluetooth
               ledFaders[menu].Set(0, 700);  //turn off Blue led

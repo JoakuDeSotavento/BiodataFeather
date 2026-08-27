@@ -2,20 +2,29 @@
 //
 // -----------------------------------------------------------------------------
 void setup() {
+  ensureDeviceIdentity();
 
-  if (debugSerial || rawSerial) {
-    Serial.begin(115200); // Serial baud for debugging and raw
-    delay(1000); // CRÍTICO: Estabilización antes de I2C (como en código funcional)
-  }
-  
-      //load from EEPROM memory
+  //load from EEPROM memory
   EEPROM.begin(EEPROM_SIZE);
 
-    
+  // Same order as v10: CDC first, then register MIDI, then start TinyUSB.
+  // USB.begin() before Serial.begin() starts a MIDI-only stack; Serial.begin()
+  // afterwards either misses CDC or re-enumerates and drops the MIDI interface.
+  if (debugSerial || rawSerial) {
+    Serial.begin(115200); // Serial baud for debugging and raw
+  }
 
-  if(usbmidi) {
-    USB.begin(); // Inicializar USB (ESP32 v3.3.2)
-    usbMIDI.begin(); // Inicializar USB-MIDI nativo
+  if (usbmidi) {
+    static char usbProduct[24];
+    snprintf(usbProduct, sizeof(usbProduct), "Biodata %s", deviceSuffix.c_str());
+    USB.productName(usbProduct);
+    usbMIDI.begin();
+    delay(500);
+    USB.begin();
+  }
+
+  if (debugSerial || rawSerial) {
+    delay(1000); // I2C stabilization after USB/Serial are up
   }
   
   //pinMode(buttonPin, INPUT_PULLUP); //button managed by PinButton
@@ -127,7 +136,7 @@ void setup() {
 void loop() {
   //manage time
   currentMillis = millis();
-  MIDI.read();
+  if (wifiMIDI) MIDI.read();
   
   //analyze data when the buffer is full
   if (sampleIndex >= samplesize)  {
@@ -164,7 +173,18 @@ void loop() {
  
 
 //this keeps the Red LED on when wifi is not connected
-  if(wifiMIDI && WiFi.status() != WL_CONNECTED) { ledFaders[0].Set(ledFaders[0].maxBright,0); } 
+  if(wifiMIDI && WiFi.status() != WL_CONNECTED) { ledFaders[0].Set(ledFaders[0].maxBright,0); }
+
+  // BLE connect: blue LED on for 1 s, then off
+  if (bleConnectFlashPending) {
+    bleConnectFlashPending = false;
+    ledFaders[3].Set(ledFaders[3].maxBright, 0);
+    bleConnectFlashOffAt = currentMillis + 1000;
+  }
+  if (bleConnectFlashOffAt != 0 && currentMillis >= bleConnectFlashOffAt) {
+    ledFaders[3].Set(0, 0);
+    bleConnectFlashOffAt = 0;
+  } 
 
   checkButton();
 

@@ -17,15 +17,7 @@ void setNote(int value, int velocity, long duration, int notechannel)
       if(usbmidi) usbMIDI.noteOn(value,velocity,channel); // API nativa ESP32 v3.3.2
       if(wifiMIDI&&isConnected) MIDI.sendNoteOn(value,velocity,channel);
       if (bleMIDI) {
-              if (deviceConnected) {
-              // note On
-                midiPacket[2] = (144 | ((notechannel-1) & 0x0F)); //note On with channel
-               // midiPacket[2] = 0x90; // note down, channel 0
-                midiPacket[3] = value; //note
-                midiPacket[4] = velocity;  // velocity
-                pCharacteristic->setValue(midiPacket, 5); // packet, length in bytes
-                pCharacteristic->notify();
-              }
+        sendBleMidi(144 | ((notechannel - 1) & 0x0F), value, velocity);
       }
       
       // MQTT Buffer: acumular solo con WiFi (el envío real exige WiFi + MQTT en sendBufferToInflux)
@@ -80,15 +72,9 @@ void checkControl()
        if(serialMIDI) midiSerial(176, channel, controlMessage.type, controlMessage.value); 
        if(usbmidi) usbMIDI.controlChange(controlNumber,controlMessage.value,channel); // API nativa ESP32 v3.3.2
        if(wifiMIDI&&isConnected) { MIDI.sendControlChange(controlNumber,controlMessage.value,channel); } //AppleMIDI.sendControlChange?
-       if(deviceConnected) {   //bluetooth CC
-                // note On
-          midiPacket[2] = (176 | ((channel-1) & 0x0F)); //CC with base channel ** 
-         // midiPacket[2] = 0x90; // note down, channel 0
-          midiPacket[3] = controlNumber; //cc 80
-          midiPacket[4] = controlMessage.value;
-          pCharacteristic->setValue(midiPacket, 5); // packet, length in bytes
-          pCharacteristic->notify();
-        } 
+       if (bleMIDI) {
+         sendBleMidi(176 | ((channel - 1) & 0x0F), controlNumber, controlMessage.value);
+       } 
     }
   }
 }
@@ -109,15 +95,7 @@ void checkNote()
 //          Serial.println(noteArray[i].value);
 //        }
        if (bleMIDI) {
-        if (deviceConnected) {
-        // note On
-          midiPacket[2] = (144 | ((noteArray[i].channel-1) & 0x0F)); //note On with channel
-         // midiPacket[2] = 0x90; // note down, channel 0
-          midiPacket[3] = noteArray[i].value; //note
-          midiPacket[4] = noteArray[i].velocity;  // velocity
-          pCharacteristic->setValue(midiPacket, 5); // packet, length in bytes
-          pCharacteristic->notify();
-        }
+         sendBleMidi(144 | ((noteArray[i].channel - 1) & 0x0F), noteArray[i].value, noteArray[i].velocity);
        }
       }
     }
