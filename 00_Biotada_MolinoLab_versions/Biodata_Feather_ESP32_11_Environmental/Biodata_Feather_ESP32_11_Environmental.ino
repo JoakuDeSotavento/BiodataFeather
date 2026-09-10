@@ -661,14 +661,96 @@ void showBinaryLeds(int value) {
   }
 }
 
+// Helper: rangos de potenciometro equitativos (Arduino map deja el max casi inalcanzable)
+static int mapMenuIndex(int knob, int count) {
+  if (count <= 1) return 0;
+  long v = map((long)knob, 0L, 4095L, 0L, (long)count);
+  if (v >= count) v = count - 1;
+  if (v < 0) v = 0;
+  return (int)v;
+}
+
+static void saveMenuSelection(byte menu, byte modeValue) {
+  if (menu == 0) {
+    applyScale(modeValue);
+    EEPROM.write(0, currentScale);
+    if (debugSerial) {
+      Serial.print("MIDI Scale ");
+      Serial.print(currentScale);
+      Serial.print(" ");
+      Serial.println(scaleName[currentScale]);
+    }
+  } else if (menu == 1) {
+    if (modeValue < 1) modeValue = 1;
+    if (modeValue > 16) modeValue = 16;
+    channel = modeValue;
+    EEPROM.write(1, channel);
+    if (debugSerial) {
+      Serial.print("Channel ");
+      Serial.println(channel);
+    }
+  } else if (menu == 2) {
+    // Solo aplicar si cambia el estado (evita re-setupWifi en timeout)
+    if (modeValue == 0 && wifiMIDI != 0) {
+      if (debugSerial) Serial.println("Wifi Shutdown ");
+      bufferEnabled = false;
+      WiFi.disconnect(true);
+      delay(1);
+      WiFi.mode(WIFI_OFF);
+      delay(1);
+      wifiMIDI = 0;
+      EEPROM.write(2, 0);
+    } else if (modeValue == 1 && wifiMIDI != 1) {
+      if (debugSerial) Serial.println("Wifi Power On");
+      wifiMIDI = 1;
+      EEPROM.write(2, 1);
+      setupEnvironmentalSensors();  // sonda unica; no-op si ya se probo sin hardware
+      setupWifi();
+      setupMQTT();
+      bufferEnabled = true;
+    } else {
+      EEPROM.write(2, wifiMIDI ? 1 : 0);
+    }
+  } else if (menu == 3) {
+    if (modeValue == 0 && bleMIDI != 0) {
+      bleMIDI = 0;
+      bleStop();
+      EEPROM.write(3, 0);
+      if (debugSerial) Serial.println("BLE Off");
+    } else if (modeValue == 1 && bleMIDI != 1) {
+      bleMIDI = 1;
+      EEPROM.write(3, 1);
+      if (!BLEDevice::getInitialized()) {
+        bleSetup();
+      } else {
+        ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
+        delay(1000);
+      }
+      if (debugSerial) Serial.println("BLE On");
+    } else {
+      EEPROM.write(3, bleMIDI ? 1 : 0);
+    }
+    ledFaders[menu].Set(0, 700);
+  } else if (menu == 4) {
+    if (modeValue > 11) modeValue = 11;
+    root = modeValue;
+    EEPROM.write(5, root);
+    if (debugSerial) {
+      Serial.print("Root ");
+      Serial.print(root);
+      Serial.print(" ");
+      Serial.println(rootNoteName[root]);
+    }
+  }
+
+  EEPROM.commit();
+  if (debugSerial) Serial.println("settings Saved");
+}
+
 void checkButton() {
-  //update the button and evaluate menu modes
-  // **Bug** crash after scale change when notes are running
   byte modeValue = 0;
   button.update();
 
-
-  // if(button.isSingleClick()) {
   if (button.wasReleased()) {
     if (debugSerial) {
       Serial.println("---***---***---ButtonClick***---***---***");
@@ -692,20 +774,16 @@ void checkButton() {
       Serial.println(threshold);
       Serial.print("MAC Address: ");
       Serial.println(macAddr);
-      //MIDI Output Statuses
 
       if (usbmidi) Serial.println("USB MIDI On");
       else Serial.println("USB MIDI Off");
-      //bluetooth status
       if (bleMIDI) {
         Serial.print("Bluetooth On ");
         if (deviceConnected) Serial.println("Bluetooth Connected");
         else Serial.println("Bluetooth DisConnected");
       } else Serial.println("Bluetooth Off");
 
-
       if (wifiMIDI) {
-        //wifi connection status
         Serial.print("SSID configurado/activo: ");
         if (WiFi.status() == WL_CONNECTED) {
           Serial.println(WiFi.SSID());
@@ -718,7 +796,6 @@ void checkButton() {
           Serial.println("Wifi Connected");
         } else Serial.println("WiFi Not Connected");
 
-        //wifi Signal level
         Serial.print("RSS Signal level: ");
         Serial.println(WiFi.RSSI());
         if (isConnected) Serial.println(F("RTP MIDI Connected!"));
@@ -729,42 +806,34 @@ void checkButton() {
       } else Serial.println("Wifi Off");
     }
 
-    //battery monitor
-    //        float batteryLevel = float(analogRead(35))/float(4095)*2.0*3.3*1.1; //A13
-    //        if (debugSerial) {
-    //          Serial.print("Battery Voltage: ");
-    //          Serial.println(batteryLevel); //of course while plugged into usb the voltage will be 4.x
-    //        }
-
     int knobValue = analogRead(potPin);
     int prevKnob = knobValue;
     unsigned long menuTimer = millis();
-    int menu = 0;  //main biodata play mode
-    while (menuTimer + 10000 > millis()) {
-      //knob turn to extend time and select menu
-      knobValue = analogRead(potPin);
-      // if(abs(knobValue - prevKnob) > 45){
-      //select range for each menu and check for click
-      menu = map(knobValue, 0, 4095, 0, 4);
+    int menu = 0;
+    const unsigned long MENU_PICK_MS = 10000;
+    const unsigned long MENU_EDIT_MS = 20000;
 
-      for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //turn leds off
-                                                                //turn on Menu LED
-      //blink led during selection
-      if ((blinkTime) < millis()) {
+    while (menuTimer + MENU_PICK_MS > millis()) {
+      knobValue = analogRead(potPin);
+      // Girar el pot renueva el tiempo (antes estaba comentado → timeout sin guardar)
+      if (abs(knobValue - prevKnob) > 45) {
+        menuTimer = millis();
+      }
+      prevKnob = knobValue;
+
+      // 5 menús con rangos equitativos (antes Root solo con ADC≈4095)
+      menu = mapMenuIndex(knobValue, 5);
+
+      for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }
+      if (blinkTime < millis()) {
         blinkToggle = !blinkToggle;
-        blinkTime = millis();
+        blinkTime = millis() + 120;
       }
       if (blinkToggle) ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
 
-      //reset timer
-      //menuTimer = millis();
-      // }  if knob change
-      prevKnob = knobValue;
-
-      //check for click and enter Menu mode
       button.update();
       modeValue = 0;
-      //             if(button.isSingleClick()) {
+
       if (button.wasReleased()) {
         if (debugSerial) {
           Serial.print("Enter Menu ");
@@ -776,192 +845,111 @@ void checkButton() {
           if (menu == 4) Serial.println(" Root");
         }
         menuTimer = millis();
-        while (menuTimer + 20000 > millis()) {
-          //Loop for management of menu mode selection
-          //main biodata routine does not run during menu selection
+        // El pot es el mismo que el umbral: al entrar hay que mostrar el valor
+        // guardado, no lo que diga la posición actual del pot.
+        const int entryKnob = analogRead(potPin);
+        prevKnob = entryKnob;
+        bool knobEngaged = false;  // true cuando el usuario mueve el pot a proposito
 
-          //check the button for clicks
+        if (menu == 0) modeValue = currentScale;
+        else if (menu == 1) modeValue = channel;
+        else if (menu == 2) modeValue = wifiMIDI ? 1 : 0;
+        else if (menu == 3) modeValue = bleMIDI ? 1 : 0;
+        else if (menu == 4) modeValue = root;
+
+        bool saved = false;
+        while (menuTimer + MENU_EDIT_MS > millis()) {
           button.update();
-          //knob turn to extend time and select menu???
           knobValue = analogRead(potPin);
 
-          // if(abs(knobValue - prevKnob) > 45){  //if knob change
-          //menuTimer = millis();
-
-          for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //all off
-
-          if (menu == 0) {  // MIDI Scaling 0-11, binary like channel
-            modeValue = map(knobValue, 0, 4095, 0, 12);
-            if (modeValue >= scaleCount) modeValue = scaleCount - 1;
-            applyScale(modeValue);  // apply live
-            showBinaryLeds(modeValue);
+          // Solo empezar a leer el pot tras un movimiento claro desde la entrada
+          if (!knobEngaged && abs(knobValue - entryKnob) > 80) {
+            knobEngaged = true;
           }
-          if (menu == 1) {  //MIDI Channel Selection
-            modeValue = map(knobValue, 0, 4095, 1, 17);
-            if (modeValue == 17) modeValue = 16;
-            showBinaryLeds(modeValue);
-          }
-          if (menu == 2) {  //Wifi Config
-                            //display green LED for wifi mode, red if wifi off, yellow if wifi not conn, white if RTP connected
-                            //turn knob to select (flashing) - Wifi Off - Red; Wifi On - White
-
-            // map(0,4095,0,1) is always 0 due to integer division; split the pot in half
-            modeValue = (knobValue > 2047) ? 1 : 0;
-            //blink led during selection
-            if ((blinkTime + 150) < millis()) {
-              blinkToggle = !blinkToggle;
-              blinkTime = millis();
-            }
-            byte statusLed = modeValue * 4;  // red=off, white=on
-            if (blinkToggle) ledFaders[statusLed].Set(ledFaders[statusLed].maxBright, 0);
-            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  //green
-          }
-          if (menu == 3) {  //Bluetooth Config
-            //display blue for ble mode, if discon
-            // left half = Off (red blink), right half = On (white blink)
-            modeValue = (knobValue > 2047) ? 1 : 0;
-            if ((blinkTime + 150) < millis()) {
-              blinkToggle = !blinkToggle;
-              blinkTime = millis();
-            }
-            byte statusLed = modeValue * 4;  // red=off, white=on
-            if (blinkToggle) ledFaders[statusLed].Set(ledFaders[statusLed].maxBright, 0);
-            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  //blue
-          }
-          if (menu == 4) {  // Root note 0=C .. 11=B
-            modeValue = map(knobValue, 0, 4095, 0, 12);
-            if (modeValue == 12) modeValue = 11;
-            root = modeValue;  // apply live
-            showBinaryLeds(modeValue);
-            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);  // white menu indicator
-          }
-
-
-
-          //Menu has been entered, value has been selected
-          //click to save a value from the submenu
-          //                      if(button.isSingleClick()) { ///select value sub menu
-          if (button.wasReleased()) {
-            //light show fast flash
-            for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //all off
-            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
-            delay(75);
-            ledFaders[menu].Set(0, 0);
-            delay(75);
-            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
-            delay(75);
-            ledFaders[menu].Set(0, 0);
-            delay(75);
-            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
-            delay(75);
-            ledFaders[menu].Set(0, 0);
-
-            for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //all off
-
-            if (menu == 0) {
-              applyScale(modeValue);
-              EEPROM.write(0, currentScale);
-              // EEPROM.commit();
-              if (debugSerial) {
-                Serial.print("MIDI Scale ");
-                Serial.print(currentScale);
-                Serial.print(" ");
-                Serial.println(scaleName[currentScale]);
-              }
-            }
-            if (menu == 1) {
-              channel = modeValue;  //set channel value
-              EEPROM.write(1, channel);
-              //  EEPROM.commit();
-              if (debugSerial) {
-                Serial.print("Channel ");
-                Serial.println(channel);
-              }
-            }
-            //save and set values as needed (wifi/bluetooth)
-            if (menu == 2) {
-              if (modeValue == 0 && wifiMIDI == 1) {
-                if (debugSerial) Serial.println("Wifi Shutdown ");
-                WiFi.disconnect(true);
-                delay(1);
-                WiFi.mode(WIFI_OFF);
-                delay(1);
-                // if(debugSerial) Serial.println(WiFi.status() == WL_CONNECTED)
-                wifiMIDI = 0;
-                EEPROM.write(2, 0);
-              }  //turn off wifi and power down (disconnect, turn off, )
-              if (modeValue == 1) {
-                if (debugSerial) Serial.println("Wifi Power On");
-                wifiMIDI = 1;
-                EEPROM.write(2, 1);
-                setupWifi();  //turn on wifi and initialize (turn on, connect)
-              }
-            }
-            if (menu == 3) {
-              if (modeValue == 0) {
-                bleMIDI = 0;
-                bleStop();
-                EEPROM.write(3, 0);
-                if (debugSerial) Serial.println("BLE Off");
-              }  //turn off bluetooth
-              if (modeValue == 1) {
-                bleMIDI = 1;
-                EEPROM.write(3, 1);
-                if (!BLEDevice::getInitialized()) {
-                  bleSetup();
-                } else {
-                  ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
-                  delay(1000);
-                }
-                if (debugSerial) Serial.println("BLE On");
-              }                             //turn on bluetooth
-              ledFaders[menu].Set(0, 700);  //turn off Blue led
-            }
-            if (menu == 4) {
-              root = modeValue;
-              EEPROM.write(5, root);
-              if (debugSerial) {
-                Serial.print("Root ");
-                Serial.print(root);
-                Serial.print(" ");
-                Serial.println(rootNoteName[root]);
-              }
-            }
-            //                        if(menu == 4) { //display wifi signal level
-            //                          for(byte i=0;i<5;i++) { ledFaders[i].Set(0,0); } //all off
-            //                          byte wifiLevel = map(abs(WiFi.RSSI()),90,30,0,4);
-            //                          for(byte j=0;j<wifiLevel;j++){
-            //                            ledFaders[j].Set(ledFaders[j].maxBright,0);
-            //                          }
-            //                          delay(3000);
-            //                          for(byte i=0;i<5;i++) { ledFaders[i].Set(0,700); } //all off
-            ////                          if(button.isSingleClick()) {
-            //                          Serial.print("RSSI "); Serial.print(WiFi.RSSI());
-            //                          Serial.print(" wifiLevel "); Serial.println(wifiLevel);
-            ////                          return;
-            ////                          }
-            //                        }
-
-            EEPROM.commit();  //save all the values!!
-
-            Serial.println("settings Saved, return to main?");
-            button.update();  //clear that button click lingering
-            return;           //break; //save here
-          }
-
-          //unsure if button clicks get here...shouldn't tho!
-          //                   if(button.isSingleClick()) {
-          if (button.wasReleased()) {
-            for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //all off
-            if (debugSerial) Serial.println("shouldnt get here in menus?");
-            return;  //save here
+          if (knobEngaged && abs(knobValue - prevKnob) > 45) {
+            menuTimer = millis();
           }
           prevKnob = knobValue;
+
+          for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }
+
+          if (menu == 0) {
+            if (knobEngaged) {
+              modeValue = mapMenuIndex(knobValue, scaleCount);
+              applyScale(modeValue);
+            }
+            showBinaryLeds(modeValue);
+          } else if (menu == 1) {
+            if (knobEngaged) {
+              modeValue = mapMenuIndex(knobValue, 16) + 1;  // 1..16
+              channel = modeValue;
+            }
+            showBinaryLeds(modeValue);
+          } else if (menu == 2) {
+            if (knobEngaged) {
+              modeValue = (knobValue > 2047) ? 1 : 0;
+            }
+            if (blinkTime < millis()) {
+              blinkToggle = !blinkToggle;
+              blinkTime = millis() + 150;
+            }
+            byte statusLed = modeValue * 4;
+            if (blinkToggle) ledFaders[statusLed].Set(ledFaders[statusLed].maxBright, 0);
+            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
+          } else if (menu == 3) {
+            if (knobEngaged) {
+              modeValue = (knobValue > 2047) ? 1 : 0;
+            }
+            if (blinkTime < millis()) {
+              blinkToggle = !blinkToggle;
+              blinkTime = millis() + 150;
+            }
+            byte statusLed = modeValue * 4;
+            if (blinkToggle) ledFaders[statusLed].Set(ledFaders[statusLed].maxBright, 0);
+            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
+          } else if (menu == 4) {
+            if (knobEngaged) {
+              modeValue = mapMenuIndex(knobValue, 12);  // 0..11
+              root = modeValue;
+            }
+            showBinaryLeds(modeValue);
+            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
+          }
+
+          if (button.wasReleased()) {
+            for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }
+            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
+            delay(75);
+            ledFaders[menu].Set(0, 0);
+            delay(75);
+            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
+            delay(75);
+            ledFaders[menu].Set(0, 0);
+            delay(75);
+            ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
+            delay(75);
+            ledFaders[menu].Set(0, 0);
+            for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }
+
+            saveMenuSelection(menu, modeValue);
+            saved = true;
+            button.update();
+            break;
+          }
         }
+
+        // Timeout del submenú: persistir el valor que se estaba previsualizando
+        // (antes se perdía al reiniciar porque solo vivía en RAM)
+        if (!saved) {
+          if (debugSerial) Serial.println("Menu timeout — guardando valor actual");
+          saveMenuSelection(menu, modeValue);
+        }
+
+        for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }
+        return;
       }
     }
 
-    for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }  //all off
+    for (byte i = 0; i < 5; i++) { ledFaders[i].Set(0, 0); }
   }
-  //if double, if long click, etc
 }

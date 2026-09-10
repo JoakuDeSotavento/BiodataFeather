@@ -101,10 +101,14 @@ void setup() {
 
   byte rootByte = EEPROM.read(5);
   if(rootByte > 11) rootByte = 0; // uninitialized EEPROM on older devices
-  
-  channel = midiChannel; //need two bytes to hold up to 16 channels!!
+
+  // Canal MIDI válido 1–16 (EEPROM corrupto/viejo puede tener 0 o 255)
+  if (midiChannel < 1 || midiChannel > 16) midiChannel = 1;
+  if (scaleIndex >= scaleCount) scaleIndex = defScale;
+
+  channel = midiChannel;
   root = rootByte;
-  
+
   applyScale(scaleIndex);
   wifiMIDI = wifiPower;
   bleMIDI = blePower;
@@ -158,6 +162,7 @@ void loop() {
       }
       checkBufferTimer();
     }
+    // Solo si hay sensores: return inmediato si no (sin I2C ni delays)
     checkEnvironmentalTimer();
   }
 

@@ -1,7 +1,8 @@
 // ============================================================================
 // ENVIRONMENTAL.INO - Lectura y envío de datos ambientales (BME688 + LTR329)
 // ============================================================================
-// Integración de sensores ambientales para envío vía MQTT cada 5 minutos
+// Si no hay sensores conectados, se detecta una sola vez y se omite todo el
+// trabajo periódico (sin reintentos I2C ni delays que ralenticen MIDI/biodata).
 // ============================================================================
 
 #include "Adafruit_LTR329_LTR303.h"
@@ -27,110 +28,90 @@ DFRobot_BME68x_I2C bme(0x77);  // I2C address 0x77
 
 // Timing para lectura ambiental
 unsigned long lastEnvironmentalRead = 0;
-const unsigned long ENVIRONMENTAL_READ_INTERVAL = 300000;  // 5 minutos (300000 ms)
+const unsigned long ENVIRONMENTAL_READ_INTERVAL = 300000;  // 5 minutos
 
-// Estado de inicialización
-bool environmentalSensorsReady = false;
+// Estado: probe único al arranque / al activar WiFi
+bool environmentalProbed = false;      // ya se intentó detectar hardware
+bool environmentalSensorsReady = false;  // al menos un sensor usable
 bool ltr329Ready = false;
 bool bme688Ready = false;
 
-// Sea level para calibración de presión (opcional)
 #ifdef CALIBRATE_PRESSURE
-float seaLevel = 101325.0;  // Presión estándar a nivel del mar (Pa)
+float seaLevel = 101325.0;
 #endif
 
-// Prototipos de funciones
 void setupEnvironmentalSensors();
 void readEnvironmentalSensors();
 void sendEnvironmentalData(float temp, float pres, float hum, float gas, float alt, uint16_t visible_ir, uint16_t infrared);
+void checkEnvironmentalTimer();
 
 // ============================================================================
-// SETUP ENVIRONMENTAL SENSORS - Inicialización de sensores ambientales
+// SETUP ENVIRONMENTAL SENSORS - Una sola sonda; si falla, no se vuelve a llamar
 // ============================================================================
 void setupEnvironmentalSensors() {
+  // Si ya se sondeó y no hay hardware: no reintentar (evita delays/I2C en loop)
+  if (environmentalProbed && !environmentalSensorsReady) {
+    return;
+  }
+  // Si ya están listos, no reinicializar
+  if (environmentalProbed && environmentalSensorsReady) {
+    return;
+  }
+
+  environmentalProbed = true;
+  ltr329Ready = false;
+  bme688Ready = false;
+  environmentalSensorsReady = false;
+
   if (debugSerial) {
     Serial.println("=== Inicializando Sensores Ambientales ===");
   }
 
-  // Inicializar LTR329
-  ltr329Ready = false;
-  if (!ltr.begin()) {
-    if (debugSerial) {
-      Serial.println("✗ LTR329 no encontrado - Continuando sin LTR329");
-    }
-  } else {
+  // LTR329 — un solo intento (begin falla rápido si no hay dispositivo)
+  if (ltr.begin()) {
     ltr329Ready = true;
-    if (debugSerial) {
-      Serial.println("✓ LTR329 OK");
-    }
+    if (debugSerial) Serial.println("✓ LTR329 OK");
+  } else if (debugSerial) {
+    Serial.println("✗ LTR329 no encontrado");
   }
 
-  // Inicializar BME688 (continuar aunque LTR329 haya fallado)
-  bme688Ready = false;
-  uint8_t rslt = 1;
-  const uint8_t kBmeMaxAttempts = 3;
-  const unsigned long kBmeRetryMs = 500;
-  uint8_t attempts = 0;
-  while (rslt != 0 && attempts < kBmeMaxAttempts) {
-    rslt = bme.begin();
-    if (rslt != 0) {
-      if (debugSerial) {
-        Serial.println("BME68x begin failure, reintentando...");
-      }
-      delay(kBmeRetryMs);
-      attempts++;
-    }
-  }
-
-  if (rslt != 0) {
-    if (debugSerial) {
-      Serial.println("✗ BME68x no encontrado en el arranque (se reintentará en el ciclo)");
-    }
-    bme688Ready = false;
-  } else {
+  // BME688 — un solo intento, sin bucle de reintentos con delay
+  uint8_t rslt = bme.begin();
+  if (rslt == 0) {
     bme688Ready = true;
-    if (debugSerial) {
-      Serial.println("✓ BME68x OK");
-    }
+    if (debugSerial) Serial.println("✓ BME68x OK");
+  } else if (debugSerial) {
+    Serial.println("✗ BME68x no encontrado");
   }
 
-  // Si ningún sensor está disponible: no bloquear el resto del firmware; reintentar más tarde
   if (!ltr329Ready && !bme688Ready) {
     if (debugSerial) {
-      Serial.println("✗ Ningún sensor ambiental ahora — biodata/MIDI siguen; reintento periódico");
+      Serial.println("✗ Sin sensores ambientales — se omite toda la lógica (sin reintentos)");
     }
     environmentalSensorsReady = false;
-    lastEnvironmentalRead = millis();
     return;
   }
 
 #ifdef CALIBRATE_PRESSURE
-  // Calibrar presión a nivel del mar (opcional) - solo si BME688 está disponible
   if (bme688Ready) {
     bme.startConvert();
     delay(1000);
     bme.update();
     seaLevel = bme.readSeaLevel(525.0);
     if (isnan(seaLevel) || seaLevel <= 0) {
-      seaLevel = 101325.0;  // 1 atm estándar
-      if (debugSerial) {
-        Serial.println("Sea level inválido, usando 101325 Pa");
-      }
-    } else {
-      if (debugSerial) {
-        Serial.print("Sea level OK: ");
-        Serial.println(seaLevel);
-      }
+      seaLevel = 101325.0;
+      if (debugSerial) Serial.println("Sea level inválido, usando 101325 Pa");
+    } else if (debugSerial) {
+      Serial.print("Sea level OK: ");
+      Serial.println(seaLevel);
     }
   }
 #endif
 
-  // Configurar BME688 solo si está disponible
   if (bme688Ready) {
     bme.setGasHeater(360, 100);
   }
 
-  // Configurar LTR329 DESPUÉS del BME688 (solo si está disponible)
   if (ltr329Ready) {
     ltr.setGain(LTR3XX_GAIN_2);
     ltr.setIntegrationTime(LTR3XX_INTEGTIME_100);
@@ -143,24 +124,20 @@ void setupEnvironmentalSensors() {
   if (debugSerial) {
     Serial.println("=== Sensores Ambientales Listos ===");
     Serial.print("LTR329: ");
-    Serial.println(ltr329Ready ? "✓ Disponible" : "✗ No disponible");
+    Serial.println(ltr329Ready ? "✓" : "✗");
     Serial.print("BME688: ");
-    Serial.println(bme688Ready ? "✓ Disponible" : "✗ No disponible");
-    Serial.print("Intervalo de lectura: ");
-    Serial.print(ENVIRONMENTAL_READ_INTERVAL / 1000);
-    Serial.println(" segundos");
+    Serial.println(bme688Ready ? "✓" : "✗");
   }
 }
 
 // ============================================================================
-// READ ENVIRONMENTAL SENSORS - Leer datos de sensores ambientales
+// READ ENVIRONMENTAL SENSORS
 // ============================================================================
 void readEnvironmentalSensors() {
   if (!environmentalSensorsReady) {
     return;
   }
 
-  // Leer datos del BME688 (solo si está disponible)
   float temperatura = 0;
   float presion = 0;
   float humedad = 0;
@@ -168,29 +145,23 @@ void readEnvironmentalSensors() {
   float altitud = 0;
 
   if (bme688Ready) {
-    // Iniciar conversión del BME688
     bme.startConvert();
-    delay(100);  // Mínimo para estabilizar
+    delay(100);  // estabilización BME (solo cada 5 min si hay sensor)
     bme.update();
-
-    // Leer datos del BME688
-    temperatura = bme.readTemperature() / 100.0;  // Convertir de centésimas a grados
+    temperatura = bme.readTemperature() / 100.0;
     presion = bme.readPressure();
-    humedad = bme.readHumidity() / 1000.0;  // Convertir de milésimas a porcentaje
+    humedad = bme.readHumidity() / 1000.0;
     gas = bme.readGasResistance();
     altitud = bme.readAltitude();
   }
 
-  // Leer datos del LTR329 (solo si está disponible)
   uint16_t visible_plus_ir = 0;
   uint16_t infrared = 0;
-  bool valid = false;
 
   if (ltr329Ready && ltr.newDataAvailable()) {
-    valid = ltr.readBothChannels(visible_plus_ir, infrared);
+    ltr.readBothChannels(visible_plus_ir, infrared);
   }
 
-  // Debug
   if (debugSerial) {
     Serial.println("--- Lectura Ambiental ---");
     Serial.printf("Temp: %.2f °C\n", temperatura);
@@ -202,23 +173,21 @@ void readEnvironmentalSensors() {
     Serial.printf("Infrared: %u\n", infrared);
   }
 
-  // Enviar por MQTT solo con WiFi y broker listos
   if (WiFi.status() == WL_CONNECTED && mqtt.connected()) {
     sendEnvironmentalData(temperatura, presion, humedad, gas, altitud, visible_plus_ir, infrared);
   } else if (debugSerial) {
     if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("⚠ WiFi sin conexión - datos ambientales no enviados por MQTT");
+      Serial.println("⚠ WiFi sin conexión - ambientales no enviados");
     } else {
-      Serial.println("⚠ MQTT no conectado - Datos ambientales no enviados");
+      Serial.println("⚠ MQTT no conectado - ambientales no enviados");
     }
   }
 }
 
 // ============================================================================
-// SEND ENVIRONMENTAL DATA - Enviar datos ambientales vía MQTT
+// SEND ENVIRONMENTAL DATA
 // ============================================================================
 void sendEnvironmentalData(float temp, float pres, float hum, float gas, float alt, uint16_t visible_ir, uint16_t infrared) {
-  // Crear JSON con datos ambientales
   StaticJsonDocument<256> doc;
   doc["temperatura"] = temp;
   doc["presion"] = pres;
@@ -228,43 +197,32 @@ void sendEnvironmentalData(float temp, float pres, float hum, float gas, float a
   doc["visible_ir"] = visible_ir;
   doc["infrarrojo"] = infrared;
 
-  // Construir topic MQTT
   String mqttTopic = String(MQTT_ENV_TOPIC) + "/" + sensorID;
 
-  // Serializar JSON
   char mqttPayload[256];
   serializeJson(doc, mqttPayload);
 
-  // Enviar vía MQTT
-  bool success = mqtt.publish(mqttTopic.c_str(), mqttPayload, false);  // QoS 0
+  bool success = mqtt.publish(mqttTopic.c_str(), mqttPayload, false);
 
   if (debugSerial) {
     if (success) {
       Serial.print("✓ Datos ambientales enviados a: ");
       Serial.println(mqttTopic);
     } else {
-      Serial.print("✗ Error al enviar datos ambientales - Estado MQTT: ");
+      Serial.print("✗ Error ambientales MQTT: ");
       Serial.println(mqtt.state());
     }
   }
 }
 
 // ============================================================================
-// CHECK ENVIRONMENTAL TIMER - Verificar si es momento de leer sensores
+// CHECK ENVIRONMENTAL TIMER — no-op si no hay sensores
 // ============================================================================
 void checkEnvironmentalTimer() {
   if (!environmentalSensorsReady) {
-    if (currentMillis - lastEnvironmentalRead >= ENVIRONMENTAL_READ_INTERVAL) {
-      lastEnvironmentalRead = currentMillis;
-      if (debugSerial) {
-        Serial.println("=== Reintento de sensores ambientales ===");
-      }
-      setupEnvironmentalSensors();
-    }
-    return;
+    return;  // sin hardware: cero coste en el loop
   }
 
-  // Verificar si ha pasado el intervalo de lectura (5 minutos)
   if (currentMillis - lastEnvironmentalRead >= ENVIRONMENTAL_READ_INTERVAL) {
     lastEnvironmentalRead = currentMillis;
     readEnvironmentalSensors();
