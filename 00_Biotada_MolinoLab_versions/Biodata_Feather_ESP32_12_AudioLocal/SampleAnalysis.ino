@@ -146,6 +146,17 @@ void analyzeSample()
       Serial.println(); //end of raw data packet
 
     }
+
+    // Misma estadística que v08 OSC, solo si el destino es local y el payload incluye raw.
+    static unsigned long rawOscTime = 0;
+    if (oscSendRawEnabled() && (change || (currentMillis > rawOscTime + rawSerialDelay))) {
+      rawOscTime = currentMillis;
+      int mappedAverg = map(averg, 0, 600, 0, 100);
+      int mappedThreshold = map(constrain(threshold * stdevi, 0, 300), 0, 300, 0, 100);
+      int mappedDelta = map(delta, 0, 300, 0, 100);
+      int mappedChange = change * 90;
+      sendOSCRaw(mappedAverg, stdevi, mappedThreshold, mappedDelta, mappedChange);
+    }
        
     //reset array for next sample
     sampleIndex = 0;

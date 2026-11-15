@@ -21,7 +21,7 @@
 3. LED display of wifi status, RTP status, battery status?
   Green Wifi Connected, White RTP connected, Yellow RTP disc conn, Blue Ble conn
   menus
-    Red - MIDI channel, Yellow - MIDI Scale, Green - WiFi on/off, Blue - Ble on/off, White - Root note
+    Red - MIDI channel, Yellow - MIDI Scale, Green - WiFi off/on/config, Blue - Ble on/off, White - Root note
 4. Move key variables to top of .ino (channel, wifi cred, IP, blue/wifi mode)
 5. Velocity using CC80, mapping velocity range
 6. Enable CC, variable for cc number and mapping range
@@ -40,6 +40,8 @@ v12 Audio local:
 // ============================================================================
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
+#include <WiFiUdp.h>
+#include <OSCMessage.h>
 #include <esp_system.h>
 #include <esp_mac.h>
 #include <PubSubClient.h>
@@ -111,6 +113,48 @@ byte channel = 1;                      //
 IPAddress local_IP(192, 168, 0, 110);  //use this IP
 bool staticIP = false;                 // true;  //toggle for dynamic IP
 //static IP
+
+// Red configurable sin recompilar (NVS). Destino online = MQTT; local = OSC.
+#ifndef OSC_IP_DEFAULT
+#define OSC_IP_DEFAULT "192.168.1.35"
+#endif
+#ifndef OSC_PORT_DEFAULT
+#define OSC_PORT_DEFAULT 8000
+#endif
+
+enum DestMode : uint8_t { DEST_ONLINE = 0, DEST_LOCAL = 1 };
+enum PayloadMode : uint8_t { PAYLOAD_MIDI = 0, PAYLOAD_RAW = 1, PAYLOAD_BOTH = 2 };
+
+struct NetConfig {
+  String ssid;
+  String pass;
+  uint8_t destMode;
+  String oscIP;
+  uint16_t oscPort;
+  uint8_t payloadMode;
+  bool fromNvs;
+};
+
+NetConfig netConfig;
+bool netConfigLoaded = false;
+
+void loadNetConfig();
+void saveNetConfig();
+void clearNetConfig();
+bool wifiDestIsLocal();
+bool oscSendRawEnabled();
+bool oscSendMidiEnabled();
+void oscEnsureStarted();
+void oscStop();
+void sendOSCRaw(int averg, float stdevi, int thresholdMapped, int deltaMapped, int changeMapped);
+void sendOSCNoteOn(int note, int velocity, long durationMs, int noteChannel);
+void sendOSCNoteOff(int note, int noteChannel);
+void sendOSCCC(int cc, int value, int noteChannel);
+bool connectStaFromConfig();
+void startConfigPortal();
+void openWifiConfigPortal();
+void printWifiDestStatus();
+void beginWifiServices();
 
 //MIDI Note and Controls
 const byte polyphony = 5;  // 1; //mono  // number of notes to track at a given time
@@ -533,50 +577,22 @@ void setupWifi() {
     }
   }
 
-  WiFi.mode(WIFI_STA);
-  wifiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
-#if defined(WIFI_SSID_2) && defined(WIFI_PASSWORD_2)
-  if (WIFI_SSID_2[0] != '\0') {
-    wifiMulti.addAP(WIFI_SSID_2, WIFI_PASSWORD_2);
-  }
-#endif
-#if defined(WIFI_SSID_3) && defined(WIFI_PASSWORD_3)
-  if (WIFI_SSID_3[0] != '\0') {
-    wifiMulti.addAP(WIFI_SSID_3, WIFI_PASSWORD_3);
-  }
-#endif
-
-  if (debugSerial) {
-    Serial.println(F("Intentando conexión WiFi (hasta 15 s)..."));
+  // NVS primero; si no asocia, redes de secrets.h. Si ninguna responde, portal.
+  bool connected = connectStaFromConfig();
+  if (!connected) {
+    startConfigPortal();
+    connected = (WiFi.status() == WL_CONNECTED);
   }
 
-  //could get 'stuck' here if we can't connect ... hmm..
-  //timeout after some duration  to allow Serial MIDI or
-  //combo BLE (who would do that?)
-  //but it doesn't seem to get stuck .. at home duh!
-  bool ledToggle = 1;
-  unsigned long wifiMillis = millis();
-  while (wifiMulti.run() != WL_CONNECTED) {
-    delay(500);
-    if (debugSerial) Serial.print(F("."));
-    //flash LED on and off toggle
-    if (ledToggle) {
-      ledFaders[0].Set(ledFaders[0].maxBright, 0);
-    } else ledFaders[0].Set(0, 0);
-    ledToggle = !ledToggle;
-    ledFaders[0].Update();
-    if (wifiMillis + 15000 < millis()) break;
-  }
-
-  //was wifi connectionsuccessfuL?
-  if (WiFi.status() == WL_CONNECTED) {
+  if (connected) {
     currentSSID = WiFi.SSID();
     if (debugSerial) Serial.println(F("WiFi connected"));
-    //solid LED
     ledFaders[0].Set(0, 0);                       //turn off Red
     ledFaders[2].Set(ledFaders[2].maxBright, 0);  //turn on Green
     delay(1000);
     ledFaders[2].Set(0, 4000);  //fade out green LED
+    printWifiDestStatus();
+    if (wifiDestIsLocal()) oscEnsureStarted();
   } else {
     currentSSID = "";
     if (debugSerial) Serial.println(F("WiFi NOT connected"));
@@ -711,6 +727,12 @@ static void saveMenuSelection(byte menu, byte modeValue) {
     }
   } else if ((menu == 2 || menu == 3) && audioMode) {
     // Solo se guarda: las radios se quedan apagadas mientras dure el modo audio
+    // En WiFi, modeValue 1 = portal: no se guarda en audio
+    if (menu == 2 && modeValue == 1) {
+      if (debugSerial) Serial.println("Config WiFi solo en modo MIDI");
+      return;
+    }
+    // 0=off, 2=on → EEPROM solo 0/1
     EEPROM.write(menu, modeValue ? 1 : 0);
     if (debugSerial) Serial.println("Modo audio: se aplicará al volver a MIDI");
   } else if (menu == 1) {
@@ -723,24 +745,28 @@ static void saveMenuSelection(byte menu, byte modeValue) {
       Serial.println(channel);
     }
   } else if (menu == 2) {
+    // 0 = off (rojo), 1 = config (azul), 2 = on (blanco)
+    if (modeValue == 1) {
+      openWifiConfigPortal();
+      return;
+    }
+    byte wifiOn = (modeValue >= 2) ? 1 : 0;
     // Solo aplicar si cambia el estado (evita re-setupWifi en timeout)
-    if (modeValue == 0 && wifiMIDI != 0) {
+    if (wifiOn == 0 && wifiMIDI != 0) {
       if (debugSerial) Serial.println("Wifi Shutdown ");
       bufferEnabled = false;
+      oscStop();
       WiFi.disconnect(true);
       delay(1);
       WiFi.mode(WIFI_OFF);
       delay(1);
       wifiMIDI = 0;
       EEPROM.write(2, 0);
-    } else if (modeValue == 1 && wifiMIDI != 1) {
+    } else if (wifiOn == 1 && wifiMIDI != 1) {
       if (debugSerial) Serial.println("Wifi Power On");
       wifiMIDI = 1;
       EEPROM.write(2, 1);
-      setupEnvironmentalSensors();  // sonda unica; no-op si ya se probo sin hardware
-      setupWifi();
-      setupMQTT();
-      bufferEnabled = true;
+      beginWifiServices();
     } else {
       EEPROM.write(2, wifiMIDI ? 1 : 0);
     }
@@ -866,6 +892,7 @@ void checkButton() {
         Serial.println();
         Serial.print(F("IP address is "));
         Serial.println(WiFi.localIP());
+        printWifiDestStatus();
       } else Serial.println("Wifi Off");
     }
 
@@ -903,7 +930,7 @@ void checkButton() {
           Serial.print(menu);
           if (menu == 0) Serial.println(" Scale");
           if (menu == 1) Serial.println(audioMode ? " Patch" : " Channel");
-          if (menu == 2) Serial.println(" Wifi");
+          if (menu == 2) Serial.println(" Wifi (off / on / config)");
           if (menu == 3) Serial.println(" Bluetooth");
           if (menu == 4) Serial.println(" Root");
         }
@@ -917,7 +944,7 @@ void checkButton() {
         if (menu == 0) modeValue = currentScale;
         else if (menu == 1 && audioMode) modeValue = synthPatch;
         else if (menu == 1) modeValue = channel;
-        else if (menu == 2) modeValue = wifiMIDI ? 1 : 0;
+        else if (menu == 2) modeValue = wifiMIDI ? 2 : 0;  // 0=off, 2=on (1=config solo al girar)
         else if (menu == 3) modeValue = bleMIDI ? 1 : 0;
         else if (menu == 4) modeValue = root;
 
@@ -957,14 +984,17 @@ void checkButton() {
             }
             showBinaryLeds(modeValue);
           } else if (menu == 2) {
+            // 0 = off (rojo), 1 = config (azul), 2 = on (blanco)
             if (knobEngaged) {
-              modeValue = (knobValue > 2047) ? 1 : 0;
+              modeValue = mapMenuIndex(knobValue, 3);
             }
             if (blinkTime < millis()) {
               blinkToggle = !blinkToggle;
               blinkTime = millis() + 150;
             }
-            byte statusLed = modeValue * 4;
+            byte statusLed = 0;
+            if (modeValue == 1) statusLed = 3;
+            else if (modeValue == 2) statusLed = 4;
             if (blinkToggle) ledFaders[statusLed].Set(ledFaders[statusLed].maxBright, 0);
             ledFaders[menu].Set(ledFaders[menu].maxBright, 0);
           } else if (menu == 3) {
@@ -1009,9 +1039,8 @@ void checkButton() {
           }
         }
 
-        // Timeout del submenú: persistir el valor que se estaba previsualizando
-        // (antes se perdía al reiniciar porque solo vivía en RAM)
-        if (!saved) {
+        // Timeout: no abrir el portal WiFi por accidente (modeValue 1 = config)
+        if (!saved && !(menu == 2 && modeValue == 1)) {
           if (debugSerial) Serial.println("Menu timeout — guardando valor actual");
           saveMenuSelection(menu, modeValue);
         }

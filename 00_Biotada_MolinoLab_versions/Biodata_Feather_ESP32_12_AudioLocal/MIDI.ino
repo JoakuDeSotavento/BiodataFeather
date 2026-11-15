@@ -25,6 +25,7 @@ void setNote(int value, int velocity, long duration, int notechannel)
       if (bufferEnabled && WiFi.status() == WL_CONNECTED) {
         addNoteToBuffer(value, velocity, duration, notechannel);
       }
+      sendOSCNoteOn(value, velocity, duration, notechannel);
 //        if (debugSerial) { 
 //          Serial.print("Note "); Serial.print(i); Serial.print(" On: "); 
 //          Serial.print(noteArray[i].value); Serial.print(" Velocity: "); 
@@ -76,7 +77,8 @@ void checkControl()
        if(wifiMIDI&&isConnected) { MIDI.sendControlChange(controlNumber,controlMessage.value,channel); } //AppleMIDI.sendControlChange?
        if (bleMIDI) {
          sendBleMidi(176 | ((channel - 1) & 0x0F), controlNumber, controlMessage.value);
-       } 
+       }
+       sendOSCCC(controlNumber, controlMessage.value, channel);
     }
   }
 }
@@ -91,6 +93,7 @@ void checkNote()
         if(serialMIDI) midiSerial(144, channel, noteArray[i].value, 0); 
         if(usbmidi) usbMIDI.noteOff(noteArray[i].value, 0, channel); // API nativa ESP32 v3.3.2
         if(wifiMIDI && isConnected) MIDI.sendNoteOff(noteArray[i].value, 0, channel);
+        sendOSCNoteOff(noteArray[i].value, noteArray[i].channel);
         noteArray[i].velocity = 0;
         ledFaders[i].Set(0,800);//turn off leds fade out
 //        if (debugSerial) { 

@@ -80,6 +80,7 @@ void setup() {
       EEPROM.write(0, defScale); EEPROM.write(1, channel); EEPROM.write(2,0); EEPROM.write(3,1); EEPROM.write(5, 0);
       EEPROM.write(6, 0); EEPROM.write(7, 0);
       EEPROM.commit();
+      clearNetConfig();
       if (audioMode) ESP.restart();  // USB ya arrancó sin MIDI: volver a arrancar en modo MIDI
          synthPatch = 0;
          bleMIDI = 1;
@@ -132,15 +133,8 @@ void setup() {
   
 
   if (serialMIDI)  setupSerialMIDI(); // MIDI hardware serial output
-  
-  // Sensores Ambientales: Inicializar ANTES de WiFi (como código funcional)
-  if (wifiMIDI)    {
-    setupEnvironmentalSensors(); // CRÍTICO: Inicializar sensores ANTES de WiFi
-    setupWifi(); 
-    // MQTT Buffer: Inicializar buffer MQTT si WiFi está activo
-    setupMQTT();
-    bufferEnabled = true;
-  }
+
+  if (wifiMIDI) beginWifiServices();
   else { WiFi.disconnect(true); delay(1);   WiFi.mode(WIFI_OFF); delay(1);} //turn wifi radio off
   if (bleMIDI)     bleSetup();
 
@@ -164,6 +158,21 @@ void setup() {
 
 } //end setup(){}
 
+// WiFi ON: sensores y MQTT solo si el destino guardado es el servidor online.
+void beginWifiServices() {
+  loadNetConfig();
+  if (!wifiDestIsLocal()) {
+    setupEnvironmentalSensors();  // I2C antes de la radio
+  }
+  setupWifi();
+  if (WiFi.status() == WL_CONNECTED && !wifiDestIsLocal()) {
+    setupMQTT();
+    bufferEnabled = true;
+  } else {
+    bufferEnabled = false;
+  }
+}
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -180,6 +189,15 @@ void loop() {
   // Manage MIDI
   checkNote();  //turn off expired notes
   checkControl();  //update control value
+
+  // MQTT solo en destino online. Si la STA asocia después del arranque, arrancar entonces.
+  if (wifiMIDI && !wifiDestIsLocal() && WiFi.status() == WL_CONNECTED && !bufferEnabled) {
+    setupMQTT();
+    bufferEnabled = true;
+  }
+  if (wifiMIDI && wifiDestIsLocal() && WiFi.status() == WL_CONNECTED) {
+    oscEnsureStarted();
+  }
 
   // MQTT Buffer: solo con WiFi asociado (evita reconectar/publicar sin enlace)
   if(bufferEnabled) {

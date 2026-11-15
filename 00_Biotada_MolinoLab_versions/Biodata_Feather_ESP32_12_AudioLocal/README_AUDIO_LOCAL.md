@@ -15,7 +15,8 @@ Base: v11 Environmental. Añade un **modo audio local**: el Biodata sintetiza el
 |---|---|---|
 | Rojo | Escala | Escala (igual) |
 | Amarillo | Canal MIDI | **Sonido**: Pad, Pluck, Bell, Drone (1 a 4 en binario) |
-| Verde / Azul | WiFi / BLE | Solo se guarda; se aplica al volver a MIDI |
+| Verde | WiFi off / config / on | Solo off/on se guarda; config no abre portal en audio |
+| Azul | BLE | Solo se guarda; se aplica al volver a MIDI |
 | Blanco | Nota raíz | Nota raíz (igual) |
 
 El sonido cambia en vivo al girar el potenciómetro, igual que la escala.

@@ -22,8 +22,20 @@ En el Arduino IDE → Herramientas → Administrar Bibliotecas:
 - **ArduinoJson** (v6.x) - Por Benoit Blanchon
 - **Adafruit LTR329 LTR303 Library** - Para sensor de luz LTR329
 - **DFRobot_BME68x** - Para sensor ambiental BME688
+- **OSC** (CNMAT) - Mensajes OSC hacia una IP local
 
 Si no las instalas, obtendrás errores de compilación.
+
+### Portal WiFi y destino OSC / MQTT
+
+El portal se abre si el WiFi está encendido y no se asocia a ninguna red, o desde el menú verde (WiFi): girar el pot hasta la opción **config** (azul, entre rojo=off y blanco=on) y confirmar. El punto de acceso es `Biodata-XXXX`. En el navegador: `http://biodata.sinfoniabiotica.xyz/` (las sondas tipo `msftconnecttest.com` redirigen ahí). Al guardar, el dispositivo queda en **WiFi ON** y reinicia.
+
+- SSID y contraseña (se guardan en la memoria del ESP32, sin volver a flashear)
+- Destino: **servidor online (MQTT)** o **IP local (OSC)**
+- IP y puerto OSC (por defecto `192.168.1.35:8000`)
+- Qué enviar por OSC: solo MIDI (`/note`, `/noteOff`, `/cc`), solo raw (`/rawSig`) o ambos
+
+Si todavía no hay red guardada, se usan las redes de `secrets.h`. El broker MQTT sigue en `secrets.h`. El LED rojo parpadea mientras el portal está activo (hasta 10 minutos). Un reset de fábrica (botón pulsado al encender) borra también esa red guardada.
 
 ### 2️⃣ Credenciales - Archivo `secrets.h`
 
@@ -92,7 +104,7 @@ Este orden es importante para evitar problemas de inicialización I2C.
 
 1. **LED Rojo** - MIDI Scale
 2. **LED Amarillo** - MIDI Channel  
-3. **LED Verde** - WiFi ON/OFF ← Activa/desactiva buffer MQTT y sensores ambientales
+3. **LED Verde** - WiFi: off (rojo) / **config** (azul) / on (blanco) ← config abre el portal
 4. **LED Azul** - Bluetooth ON/OFF
 
 ### Sensores Ambientales
