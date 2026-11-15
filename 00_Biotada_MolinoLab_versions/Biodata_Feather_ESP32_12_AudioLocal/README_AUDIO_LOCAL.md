@@ -15,9 +15,11 @@ Base: v11 Environmental. Añade un **modo audio local**: el Biodata sintetiza el
 |---|---|---|
 | Rojo | Escala | Escala (igual) |
 | Amarillo | Canal MIDI | **Sonido**: Pad, Pluck, Bell, Drone (1 a 4 en binario) |
-| Verde | WiFi off / config / on | Solo off/on se guarda; config no abre portal en audio |
-| Azul | BLE | Solo se guarda; se aplica al volver a MIDI |
+| Verde | WiFi: off (rojo) / config (azul) / on (blanco) | Solo off/on se guarda; config no abre el portal |
+| Azul | BLE on/off | Solo se guarda; se aplica al volver a MIDI |
 | Blanco | Nota raíz | Nota raíz (igual) |
+
+En modo MIDI, la opción **config** del menú verde abre el SoftAP y la página `http://biodata.sinfoniabiotica.xyz/`. Al guardar, el Biodata queda en WiFi ON y reinicia. Detalle completo en `README_MQTT_BUFFER.md`.
 
 El sonido cambia en vivo al girar el potenciómetro, igual que la escala.
 

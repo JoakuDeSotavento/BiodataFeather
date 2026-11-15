@@ -28,14 +28,31 @@ Si no las instalas, obtendrás errores de compilación.
 
 ### Portal WiFi y destino OSC / MQTT
 
-El portal se abre si el WiFi está encendido y no se asocia a ninguna red, o desde el menú verde (WiFi): girar el pot hasta la opción **config** (azul, entre rojo=off y blanco=on) y confirmar. El punto de acceso es `Biodata-XXXX`. En el navegador: `http://biodata.sinfoniabiotica.xyz/` (las sondas tipo `msftconnecttest.com` redirigen ahí). Al guardar, el dispositivo queda en **WiFi ON** y reinicia.
+**Cómo se abre**
 
-- SSID y contraseña (se guardan en la memoria del ESP32, sin volver a flashear)
+1. Automático: WiFi ON y no se asocia a ninguna red (tras ~15 s).
+2. Manual: menú **LED verde** → girar el pot → confirmar con el botón.
+
+**Opciones del menú verde (en orden del pot)**
+
+| Opción | LED que parpadea | Acción |
+|---|---|---|
+| Off | Rojo | Apaga WiFi |
+| Config | Azul (entre rojo y blanco) | Abre el portal SoftAP |
+| On | Blanco | Enciende WiFi |
+
+**Al conectar al SoftAP** (`Biodata-XXXX`, últimos 4 hex de la MAC): el navegador abre la página de configuración como hasta ahora (captive portal), pero la URL mostrada es `http://biodata.sinfoniabiotica.xyz/` en lugar de `www.msftconnecttest.com`. También vale `http://192.168.4.1`.
+
+**Al guardar** en el portal: se escriben SSID, contraseña, destino y opciones OSC; el dispositivo pasa a **WiFi ON**, reinicia y sale del modo configuración.
+
+Campos del formulario:
+
+- SSID y contraseña (NVS del ESP32; no hace falta reflash)
 - Destino: **servidor online (MQTT)** o **IP local (OSC)**
 - IP y puerto OSC (por defecto `192.168.1.35:8000`)
 - Qué enviar por OSC: solo MIDI (`/note`, `/noteOff`, `/cc`), solo raw (`/rawSig`) o ambos
 
-Si todavía no hay red guardada, se usan las redes de `secrets.h`. El broker MQTT sigue en `secrets.h`. El LED rojo parpadea mientras el portal está activo (hasta 10 minutos). Un reset de fábrica (botón pulsado al encender) borra también esa red guardada.
+Si todavía no hay red guardada, se usan las de `secrets.h`. El broker MQTT sigue en `secrets.h`. El LED rojo parpadea mientras el portal está activo (hasta 10 minutos). Un reset de fábrica (botón pulsado al encender) borra también esa red guardada.
 
 ### 2️⃣ Credenciales - Archivo `secrets.h`
 
@@ -100,12 +117,13 @@ El buffer MQTT y los sensores ambientales se activan automáticamente cuando **W
 
 Este orden es importante para evitar problemas de inicialización I2C.
 
-### Menú LED (mismo que antes):
+### Menú LED:
 
 1. **LED Rojo** - MIDI Scale
 2. **LED Amarillo** - MIDI Channel  
-3. **LED Verde** - WiFi: off (rojo) / **config** (azul) / on (blanco) ← config abre el portal
+3. **LED Verde** - WiFi: off (rojo) / config (azul) / on (blanco). Config abre el portal; al guardar queda WiFi ON
 4. **LED Azul** - Bluetooth ON/OFF
+5. **LED Blanco** - Nota raíz
 
 ### Sensores Ambientales
 
@@ -285,10 +303,11 @@ Infrared: 567
 
 ### WiFi no se conecta a ninguna red
 
-1. Verifica que al menos `WIFI_SSID` y `WIFI_PASSWORD` estén correctos en `secrets.h`
-2. El sistema intentará conectarse a las redes en orden (1, 2, 3)
-3. Si ninguna red está disponible, WiFi se desactivará después de 15 segundos
-4. Puedes dejar `WIFI_SSID_2` y `WIFI_SSID_3` vacíos si solo usas una red
+1. Verifica SSID y contraseña (portal o `secrets.h`)
+2. El sistema prueba primero la red guardada en NVS y luego las de `secrets.h` (1, 2, 3)
+3. Si ninguna responde (~15 s), se abre el SoftAP `Biodata-XXXX` → `http://biodata.sinfoniabiotica.xyz/`
+4. También: menú verde → config (LED azul entre rojo y blanco)
+5. Puedes dejar `WIFI_SSID_2` y `WIFI_SSID_3` vacíos si solo usas una red
 
 ### Datos ambientales no se envían
 
